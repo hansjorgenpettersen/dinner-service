@@ -30,6 +30,19 @@ class ProductController(private val productRepository: ProductRepository) {
         return "redirect:/products"
     }
 
+    @PostMapping("/products/{id}/edit")
+    fun edit(
+        @PathVariable id: Long,
+        @RequestParam name: String,
+        @RequestParam(required = false) price: Double?,
+        session: HttpSession
+    ): String {
+        session.getAttribute("email") ?: return "redirect:/login"
+        val product = productRepository.findById(id).orElse(null) ?: return "redirect:/products"
+        productRepository.save(Product(id = product.id, name = name.trim(), price = price))
+        return "redirect:/products"
+    }
+
     @PostMapping("/products/{id}/delete")
     fun delete(@PathVariable id: Long, session: HttpSession): String {
         session.getAttribute("email") ?: return "redirect:/login"

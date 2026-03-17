@@ -90,6 +90,43 @@
             border-radius: 6px;
         }
         .delete-btn:hover { background: #e74c3c; color: white; }
+        .edit-btn {
+            background: none;
+            border: 2px solid #3498db;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+        }
+        .edit-btn:hover { background: #3498db; color: white; }
+        .edit-form {
+            display: none;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .edit-form.open { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .edit-form input {
+            flex: 1;
+            min-width: 0;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.95rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        .edit-form input:focus { border-color: #e67e22; }
+        .edit-form .price-input { max-width: 110px; flex: 0 0 110px; }
+        .edit-form .save-btn {
+            padding: 0.6rem 1rem;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .edit-form .save-btn:hover { background: #1e8449; }
         .empty { color: #aaa; font-style: italic; padding: 0.5rem 0; }
         .back { color: #e67e22; text-decoration: none; font-size: 0.9rem; }
         .back:hover { text-decoration: underline; }
@@ -123,16 +160,33 @@
         <div class="card">
             <h2>All Products</h2>
             <div th:if="${#lists.isEmpty(products)}" class="empty">No products yet.</div>
-            <div th:each="product : ${products}" class="product-item">
-                <div>
-                    <span class="product-name" th:text="${product.name}"></span>
-                    <span class="product-price" th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 2) : '–'}"></span>
+            <div th:each="product : ${products}">
+                <div class="product-item">
+                    <div>
+                        <span class="product-name" th:text="${product.name}"></span>
+                        <span class="product-price" th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 2) : '–'}"></span>
+                    </div>
+                    <div style="display:flex;gap:0.4rem;">
+                        <button class="edit-btn" type="button" th:onclick="'toggleEdit(' + ${product.id} + ')'">✏️</button>
+                        <form th:action="'/products/' + ${product.id} + '/delete'" method="post">
+                            <button class="delete-btn" type="submit">🗑</button>
+                        </form>
+                    </div>
                 </div>
-                <form th:action="'/products/' + ${product.id} + '/delete'" method="post">
-                    <button class="delete-btn" type="submit">🗑</button>
+                <form th:id="'edit-' + ${product.id}" class="edit-form"
+                      th:action="'/products/' + ${product.id} + '/edit'" method="post">
+                    <input type="text" name="name" th:value="${product.name}" required />
+                    <input type="number" name="price" th:value="${product.price}" placeholder="Price" step="0.01" min="0" class="price-input" />
+                    <button type="submit" class="save-btn">Save</button>
                 </form>
             </div>
         </div>
     </div>
+    <script>
+        function toggleEdit(id) {
+            const form = document.getElementById('edit-' + id);
+            form.classList.toggle('open');
+        }
+    </script>
 </body>
 </html>
