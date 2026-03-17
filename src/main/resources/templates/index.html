@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Under Construction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        h1 { color: #e67e22; font-size: 2.5rem; }
+        p  { color: #555; font-size: 1.1rem; }
+        .number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚧 Under Construction 🚧</h1>
+        <p>This site is coming soon. Here's a random number from the backend:</p>
+        <div class="number" th:text="${randomNumber}"></div>
+        <p><small>Refresh the page to get a new number.</small></p>
+    </div>
+</body>
+</html>
