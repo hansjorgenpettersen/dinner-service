@@ -44,6 +44,32 @@
         }
         .summary-box .value { font-size: 1.8rem; font-weight: bold; color: #e67e22; }
         .summary-box .label { font-size: 0.8rem; color: #777; margin-top: 0.2rem; }
+        /* Autocomplete */
+        .name-wrapper { position: relative; }
+        .suggestions {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0; right: 0;
+            background: white;
+            border: 2px solid #e67e22;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .suggestion-item {
+            padding: 0.7rem 0.8rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: #fdf3e7; }
+        .suggestion-price { color: #aaa; font-size: 0.85rem; }
         /* Add form - stacks on mobile */
         .add-form { display: flex; flex-direction: column; gap: 0.6rem; }
         .add-form label { font-size: 0.8rem; color: #777; display: block; margin-bottom: 0.2rem; }
@@ -185,9 +211,10 @@
         <div class="card">
             <h2>Add Item</h2>
             <form th:action="'/shopping-lists/' + ${list.id} + '/items'" method="post" class="add-form">
-                <div>
+                <div class="name-wrapper">
                     <label>Item name *</label>
-                    <input type="text" name="name" placeholder="e.g. Milk" required />
+                    <input type="text" name="name" id="nameInput" placeholder="e.g. Milk" required autocomplete="off" />
+                    <div class="suggestions" id="suggestions"></div>
                 </div>
                 <div class="row">
                     <div>
@@ -196,7 +223,7 @@
                     </div>
                     <div>
                         <label>Unit price</label>
-                        <input type="number" name="unitPrice" placeholder="e.g. 9.90" step="0.01" min="0" />
+                        <input type="number" name="unitPrice" id="unitPriceInput" placeholder="e.g. 9.90" step="0.01" min="0" />
                     </div>
                 </div>
                 <button type="submit">Add</button>
@@ -255,5 +282,42 @@
             </div>
         </div>
     </div>
+    <script>
+        const nameInput = document.getElementById('nameInput');
+        const priceInput = document.getElementById('unitPriceInput');
+        const suggestions = document.getElementById('suggestions');
+        let debounce;
+
+        nameInput.addEventListener('input', function () {
+            clearTimeout(debounce);
+            const q = this.value.trim();
+            if (q.length < 1) { suggestions.style.display = 'none'; return; }
+            debounce = setTimeout(() => {
+                fetch('/products/search?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(products => {
+                        suggestions.innerHTML = '';
+                        if (products.length === 0) { suggestions.style.display = 'none'; return; }
+                        products.forEach(p => {
+                            const item = document.createElement('div');
+                            item.className = 'suggestion-item';
+                            item.innerHTML = '<span>' + p.name + '</span>' +
+                                '<span class="suggestion-price">' + (p.price != null ? p.price.toFixed(2) : '') + '</span>';
+                            item.addEventListener('mousedown', function (e) {
+                                e.preventDefault();
+                                nameInput.value = p.name;
+                                if (p.price != null) priceInput.value = p.price.toFixed(2);
+                                suggestions.style.display = 'none';
+                            });
+                            suggestions.appendChild(item);
+                        });
+                        suggestions.style.display = 'block';
+                    });
+            }, 200);
+        });
+
+        nameInput.addEventListener('blur', () => setTimeout(() => suggestions.style.display = 'none', 150));
+        nameInput.addEventListener('focus', () => { if (suggestions.children.length > 0) suggestions.style.display = 'block'; });
+    </script>
 </body>
 </html>

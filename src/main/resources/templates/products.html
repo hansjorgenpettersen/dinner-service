@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products – Dinner Service</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #f0f0f0; }
+        header {
+            background: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        header h1 { color: #e67e22; margin: 0; font-size: 1.3rem; }
+        form.logout button {
+            background: none;
+            border: 2px solid #e67e22;
+            color: #e67e22;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        form.logout button:hover { background: #e67e22; color: white; }
+        .page { max-width: 700px; margin: 1.5rem auto; padding: 0 1rem; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 1.2rem 1rem;
+            margin-bottom: 1.2rem;
+        }
+        h2 { color: #2c3e50; margin-top: 0; font-size: 1.1rem; }
+        .new-form { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .new-form input {
+            flex: 1;
+            min-width: 0;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        .new-form input:focus { border-color: #e67e22; }
+        .new-form .price-input { max-width: 120px; flex: 0 0 120px; }
+        .new-form button {
+            padding: 0.75rem 1.2rem;
+            font-size: 1rem;
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .new-form button:hover { background: #cf6d17; }
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .product-item:last-child { border-bottom: none; }
+        .product-name { font-weight: bold; color: #2c3e50; font-size: 1rem; }
+        .product-price { color: #777; font-size: 0.9rem; margin-left: 0.5rem; }
+        .delete-btn {
+            background: none;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+        }
+        .delete-btn:hover { background: #e74c3c; color: white; }
+        .empty { color: #aaa; font-style: italic; padding: 0.5rem 0; }
+        .back { color: #e67e22; text-decoration: none; font-size: 0.9rem; }
+        .back:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Dinner Service</h1>
+        <form method="post" action="/logout" class="logout">
+            <button type="submit">Log out</button>
+        </form>
+    </header>
+
+    <div class="page">
+        <a href="/dashboard" class="back">← Back to dashboard</a>
+        <h2 style="margin:0.8rem 0;font-size:1.3rem;color:#2c3e50;">Products</h2>
+
+        <div class="card">
+            <h2>Add Product</h2>
+            <form method="post" action="/products/new" class="new-form">
+                <input type="text" name="name" placeholder="Product name" required />
+                <input type="number" name="price" placeholder="Price" step="0.01" min="0" class="price-input" />
+                <button type="submit">Add</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>All Products</h2>
+            <div th:if="${#lists.isEmpty(products)}" class="empty">No products yet.</div>
+            <div th:each="product : ${products}" class="product-item">
+                <div>
+                    <span class="product-name" th:text="${product.name}"></span>
+                    <span class="product-price" th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 2) : '–'}"></span>
+                </div>
+                <form th:action="'/products/' + ${product.id} + '/delete'" method="post">
+                    <button class="delete-btn" type="submit">🗑</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.*
 class ShoppingListController(
     private val shoppingListRepository: ShoppingListRepository,
     private val shoppingListItemRepository: ShoppingListItemRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val productRepository: ProductRepository
 ) {
 
     private fun currentUser(session: HttpSession): User? {
@@ -67,6 +68,11 @@ class ShoppingListController(
         shoppingListItemRepository.save(
             ShoppingListItem(name = name, count = count, unitPrice = unitPrice, addedBy = user, shoppingList = list)
         )
+        // Auto-save to product list if not already there
+        val trimmed = name.trim()
+        if (productRepository.findByNameIgnoreCase(trimmed).isEmpty) {
+            productRepository.save(Product(name = trimmed, price = unitPrice))
+        }
         return "redirect:/shopping-lists/$id"
     }
 
