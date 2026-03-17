@@ -30,6 +30,70 @@
             color: #2c3e50;
             margin: 1rem 0;
         }
+        .name-form {
+            margin-top: 2rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .name-form input {
+            padding: 0.6rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        .name-form input:focus {
+            border-color: #e67e22;
+        }
+        .name-form button {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .name-form button:hover {
+            background-color: #cf6d17;
+        }
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            align-items: center;
+            justify-content: center;
+        }
+        .popup-overlay.active {
+            display: flex;
+        }
+        .popup {
+            background: white;
+            padding: 2.5rem 3rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .popup h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin: 0 0 1rem;
+        }
+        .popup button {
+            margin-top: 1rem;
+            padding: 0.5rem 1.5rem;
+            font-size: 1rem;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .popup button:hover {
+            background-color: #cf6d17;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +102,35 @@
         <p>This site is coming soon. Here's a random number from the backend:</p>
         <div class="number" th:text="${randomNumber}"></div>
         <p><small>Refresh the page to get a new number.</small></p>
+
+        <div class="name-form">
+            <input type="text" id="nameInput" placeholder="Enter your name" />
+            <button onclick="greet()">Say Hello</button>
+        </div>
     </div>
+
+    <div class="popup-overlay" id="popup">
+        <div class="popup">
+            <h2 id="popupMessage"></h2>
+            <button onclick="closePopup()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function greet() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) return;
+            document.getElementById('popupMessage').textContent = 'Hello, ' + name + '!';
+            document.getElementById('popup').classList.add('active');
+        }
+
+        function closePopup() {
+            document.getElementById('popup').classList.remove('active');
+        }
+
+        document.getElementById('nameInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') greet();
+        });
+    </script>
 </body>
 </html>
