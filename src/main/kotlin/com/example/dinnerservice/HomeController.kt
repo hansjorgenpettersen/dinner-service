@@ -24,4 +24,10 @@ class HomeController(private val guestRepository: GuestRepository) {
         guestRepository.save(Guest(name = name))
         return "Hello, $name!"
     }
+
+    @GetMapping("/guests")
+    fun guests(model: Model): String {
+        model.addAttribute("guests", guestRepository.findAll())
+        return "guests"
+    }
 }
