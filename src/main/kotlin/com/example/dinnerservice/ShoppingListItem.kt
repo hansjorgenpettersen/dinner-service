@@ -12,6 +12,9 @@ class ShoppingListItem(
     val unitPrice: Double? = null,
     var checked: Boolean = false,
     @ManyToOne
+    @JoinColumn(name = "category_id")
+    val category: Category? = null,
+    @ManyToOne
     @JoinColumn(name = "added_by_id")
     val addedBy: User? = null,
     @ManyToOne

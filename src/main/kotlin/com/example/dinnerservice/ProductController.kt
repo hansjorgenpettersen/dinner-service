@@ -6,12 +6,18 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
 
 @Controller
-class ProductController(private val productRepository: ProductRepository) {
+class ProductController(
+    private val productRepository: ProductRepository,
+    private val categoryRepository: CategoryRepository
+) {
 
     @GetMapping("/products")
     fun list(session: HttpSession, model: Model): String {
         session.getAttribute("email") ?: return "redirect:/login"
-        model.addAttribute("products", productRepository.findAll().sortedBy { it.name.lowercase() })
+        model.addAttribute("products", productRepository.findAll().sortedWith(
+            compareBy({ it.category?.name ?: "zzz" }, { it.name.lowercase() })
+        ))
+        model.addAttribute("categories", categoryRepository.findAll().sortedBy { it.name.lowercase() })
         return "products"
     }
 
@@ -19,13 +25,15 @@ class ProductController(private val productRepository: ProductRepository) {
     fun create(
         @RequestParam name: String,
         @RequestParam(required = false) price: Double?,
+        @RequestParam(required = false) categoryId: Long?,
         session: HttpSession
     ): String {
         session.getAttribute("email") ?: return "redirect:/login"
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return "redirect:/products"
+        val category = categoryId?.let { categoryRepository.findById(it).orElse(null) }
         if (productRepository.findByNameIgnoreCase(trimmed).isEmpty) {
-            productRepository.save(Product(name = trimmed, price = price))
+            productRepository.save(Product(name = trimmed, price = price, category = category))
         }
         return "redirect:/products"
     }
@@ -35,11 +43,13 @@ class ProductController(private val productRepository: ProductRepository) {
         @PathVariable id: Long,
         @RequestParam name: String,
         @RequestParam(required = false) price: Double?,
+        @RequestParam(required = false) categoryId: Long?,
         session: HttpSession
     ): String {
         session.getAttribute("email") ?: return "redirect:/login"
         val product = productRepository.findById(id).orElse(null) ?: return "redirect:/products"
-        productRepository.save(Product(id = product.id, name = name.trim(), price = price))
+        val category = categoryId?.let { categoryRepository.findById(it).orElse(null) }
+        productRepository.save(Product(id = product.id, name = name.trim(), price = price, category = category))
         return "redirect:/products"
     }
 
@@ -50,11 +60,29 @@ class ProductController(private val productRepository: ProductRepository) {
         return "redirect:/products"
     }
 
+    @PostMapping("/categories/new")
+    fun createCategory(
+        @RequestParam name: String,
+        @RequestParam(defaultValue = "#cccccc") color: String,
+        session: HttpSession
+    ): String {
+        session.getAttribute("email") ?: return "redirect:/login"
+        categoryRepository.save(Category(name = name.trim(), color = color))
+        return "redirect:/products"
+    }
+
+    @PostMapping("/categories/{id}/delete")
+    fun deleteCategory(@PathVariable id: Long, session: HttpSession): String {
+        session.getAttribute("email") ?: return "redirect:/login"
+        categoryRepository.deleteById(id)
+        return "redirect:/products"
+    }
+
     @GetMapping("/products/search")
     @ResponseBody
     fun search(@RequestParam q: String): List<Map<String, Any?>> {
         return productRepository.findByNameContainingIgnoreCase(q)
             .sortedBy { it.name.lowercase() }
-            .map { mapOf("name" to it.name, "price" to it.price) }
+            .map { mapOf("name" to it.name, "price" to it.price, "categoryColor" to it.category?.color) }
     }
 }

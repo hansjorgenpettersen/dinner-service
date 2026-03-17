@@ -122,6 +122,7 @@
         td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #f0f0f0; color: #2c3e50; font-size: 0.95rem; }
         tr:last-child td { border-bottom: none; }
         tr.checked td { color: #bbb; text-decoration: line-through; }
+        td.color-bar { width: 4px; padding: 0; border-radius: 2px; }
         .added-by { font-size: 0.75rem; color: #aaa; }
         .tick-btn {
             background: none;
@@ -269,6 +270,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th style="width:4px;padding:0;"></th>
                             <th></th>
                             <th>Item</th>
                             <th>Qty</th>
@@ -280,6 +282,8 @@
                     </thead>
                     <tbody>
                         <tr th:each="item : ${items}" th:classappend="${item.checked} ? 'checked' : ''">
+                            <td class="color-bar"
+                                th:style="${item.category?.color != null ? 'background:' + item.category.color : 'background:transparent'}"></td>
                             <td>
                                 <form th:action="'/shopping-lists/' + ${list.id} + '/items/' + ${item.id} + '/toggle'" method="post">
                                     <button type="submit" th:classappend="${item.checked} ? 'done' : ''" class="tick-btn">✓</button>
@@ -332,7 +336,10 @@
                         products.forEach(p => {
                             const item = document.createElement('div');
                             item.className = 'suggestion-item';
-                            item.innerHTML = '<span>' + p.name + '</span>' +
+                            const dot = p.categoryColor
+                                ? '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + p.categoryColor + ';margin-right:6px;"></span>'
+                                : '';
+                            item.innerHTML = '<span>' + dot + p.name + '</span>' +
                                 '<span class="suggestion-price">' + (p.price != null ? p.price.toFixed(2) : '') + '</span>';
                             item.addEventListener('mousedown', function (e) {
                                 e.preventDefault();

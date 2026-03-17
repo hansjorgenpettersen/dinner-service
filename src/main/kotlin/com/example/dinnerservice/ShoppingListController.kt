@@ -42,6 +42,7 @@ class ShoppingListController(
             return "redirect:/shopping-lists"
         }
         val items = shoppingListItemRepository.findByShoppingList(list)
+            .sortedWith(compareBy({ it.category?.name ?: "zzz" }, { it.name.lowercase() }))
         val totalPrice = items.mapNotNull { it.totalPrice }.sum()
         model.addAttribute("list", list)
         model.addAttribute("items", items)
@@ -65,14 +66,14 @@ class ShoppingListController(
         if (list.owner?.id != user.id && !list.sharedWith.any { it.id == user.id }) {
             return "redirect:/shopping-lists"
         }
-        shoppingListItemRepository.save(
-            ShoppingListItem(name = name, count = count, unitPrice = unitPrice, addedBy = user, shoppingList = list)
-        )
-        // Auto-save to product list if not already there
         val trimmed = name.trim()
-        if (productRepository.findByNameIgnoreCase(trimmed).isEmpty) {
+        val product = productRepository.findByNameIgnoreCase(trimmed).orElseGet {
             productRepository.save(Product(name = trimmed, price = unitPrice))
         }
+        shoppingListItemRepository.save(
+            ShoppingListItem(name = trimmed, count = count, unitPrice = unitPrice,
+                category = product.category, addedBy = user, shoppingList = list)
+        )
         return "redirect:/shopping-lists/$id"
     }
 

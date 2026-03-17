@@ -9,5 +9,8 @@ class Product(
     val id: Long = 0,
     @Column(unique = true)
     val name: String = "",
-    val price: Double? = null
+    val price: Double? = null,
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    val category: Category? = null
 )
