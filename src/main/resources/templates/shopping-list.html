@@ -61,7 +61,22 @@
         }
         td { padding: 0.7rem 0.8rem; border-bottom: 1px solid #f0f0f0; color: #2c3e50; }
         tr:last-child td { border-bottom: none; }
+        tr.checked td { color: #aaa; text-decoration: line-through; }
         .added-by { font-size: 0.8rem; color: #aaa; }
+        .tick-btn {
+            background: none;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            padding: 0;
+        }
+        .tick-btn.done { border-color: #27ae60; background: #27ae60; color: white; }
         .delete-btn {
             background: none;
             border: none;
@@ -191,6 +206,7 @@
             <table th:if="${not #lists.isEmpty(items)}">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>Item</th>
                         <th>Count</th>
                         <th>Unit Price</th>
@@ -200,7 +216,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="item : ${items}">
+                    <tr th:each="item : ${items}" th:classappend="${item.checked} ? 'checked' : ''">
+                        <td>
+                            <form th:action="'/shopping-lists/' + ${list.id} + '/items/' + ${item.id} + '/toggle'" method="post">
+                                <button type="submit" th:classappend="${item.checked} ? 'done' : ''" class="tick-btn">✓</button>
+                            </form>
+                        </td>
                         <td th:text="${item.name}"></td>
                         <td th:text="${item.count != null ? item.count.intValue() : '–'}"></td>
                         <td th:text="${item.unitPrice != null ? #numbers.formatDecimal(item.unitPrice, 1, 2) : '–'}"></td>

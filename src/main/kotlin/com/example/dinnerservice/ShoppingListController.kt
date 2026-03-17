@@ -70,6 +70,15 @@ class ShoppingListController(
         return "redirect:/shopping-lists/$id"
     }
 
+    @PostMapping("/shopping-lists/{id}/items/{itemId}/toggle")
+    fun toggleItem(@PathVariable id: Long, @PathVariable itemId: Long, session: HttpSession): String {
+        currentUser(session) ?: return "redirect:/login"
+        val item = shoppingListItemRepository.findById(itemId).orElse(null) ?: return "redirect:/shopping-lists/$id"
+        item.checked = !item.checked
+        shoppingListItemRepository.save(item)
+        return "redirect:/shopping-lists/$id"
+    }
+
     @PostMapping("/shopping-lists/{id}/items/{itemId}/delete")
     fun deleteItem(@PathVariable id: Long, @PathVariable itemId: Long, session: HttpSession): String {
         val user = currentUser(session) ?: return "redirect:/login"

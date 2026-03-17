@@ -10,6 +10,7 @@ class ShoppingListItem(
     val name: String = "",
     val count: Double? = null,
     val unitPrice: Double? = null,
+    var checked: Boolean = false,
     @ManyToOne
     @JoinColumn(name = "added_by_id")
     val addedBy: User? = null,
