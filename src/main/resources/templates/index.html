@@ -120,8 +120,17 @@
         function greet() {
             const name = document.getElementById('nameInput').value.trim();
             if (!name) return;
-            document.getElementById('popupMessage').textContent = 'Hello, ' + name + '!';
-            document.getElementById('popup').classList.add('active');
+
+            fetch('/greet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'name=' + encodeURIComponent(name)
+            })
+            .then(res => res.text())
+            .then(msg => {
+                document.getElementById('popupMessage').textContent = msg;
+                document.getElementById('popup').classList.add('active');
+            });
         }
 
         function closePopup() {
