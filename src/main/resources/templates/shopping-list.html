@@ -123,6 +123,15 @@
         tr:last-child td { border-bottom: none; }
         tr.checked td { color: #bbb; text-decoration: line-through; }
         td.color-bar { width: 4px; padding: 0; border-radius: 2px; }
+        tr.category-header td {
+            padding: 0.5rem 0.5rem 0.2rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #eee;
+            background: #fafafa;
+        }
         .added-by { font-size: 0.75rem; color: #aaa; }
         .tick-btn {
             background: none;
@@ -281,7 +290,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="item : ${items}" th:classappend="${item.checked} ? 'checked' : ''">
+                        <th:block th:each="item, stat : ${items}">
+                            <tr class="category-header"
+                                th:if="${stat.first or (stat.index > 0 and items[stat.index - 1].category?.name != item.category?.name)}">
+                                <td colspan="8"
+                                    th:style="${item.category?.color != null ? 'color:' + item.category.color : 'color:#aaa'}"
+                                    th:text="${item.category?.name ?: 'No category'}"></td>
+                            </tr>
+                        <tr th:classappend="${item.checked} ? 'checked' : ''">
                             <td class="color-bar"
                                 th:style="${item.category?.color != null ? 'background:' + item.category.color : 'background:transparent'}"></td>
                             <td>
@@ -300,6 +316,7 @@
                                 </form>
                             </td>
                         </tr>
+                        </th:block>
                     </tbody>
                 </table>
             </div>
