@@ -71,7 +71,7 @@
         .add-form button:hover { background: #cf6d17; }
         /* Table with horizontal scroll on mobile */
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        table { width: 100%; border-collapse: collapse; }
         th {
             text-align: left;
             padding: 0.6rem 0.5rem;
@@ -84,7 +84,7 @@
         td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #f0f0f0; color: #2c3e50; font-size: 0.95rem; }
         tr:last-child td { border-bottom: none; }
         tr.checked td { color: #bbb; text-decoration: line-through; }
-        .added-by { font-size: 0.75rem; color: #aaa; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .added-by { font-size: 0.75rem; color: #aaa; }
         .tick-btn {
             background: none;
             border: 2px solid #ddd;
@@ -231,7 +231,7 @@
                             <td th:text="${item.count != null ? item.count.intValue() : '–'}"></td>
                             <td th:text="${item.unitPrice != null ? #numbers.formatDecimal(item.unitPrice, 1, 2) : '–'}"></td>
                             <td th:text="${item.totalPrice != null ? #numbers.formatDecimal(item.totalPrice, 1, 2) : '–'}"></td>
-                            <td class="added-by" th:text="${item.addedBy?.email}"></td>
+                            <td class="added-by" th:text="${item.addedBy?.email != null ? #strings.substring(item.addedBy.email, 0, 3) : '–'}"></td>
                             <td>
                                 <form th:action="'/shopping-lists/' + ${list.id} + '/items/' + ${item.id} + '/delete'" method="post">
                                     <button class="delete-btn" type="submit">🗑</button>
