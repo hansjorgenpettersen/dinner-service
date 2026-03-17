@@ -95,6 +95,15 @@ class ShoppingListController(
         return "redirect:/shopping-lists/$id"
     }
 
+    @PostMapping("/shopping-lists/{id}/items/clear-checked")
+    fun clearChecked(@PathVariable id: Long, session: HttpSession): String {
+        currentUser(session) ?: return "redirect:/login"
+        val list = shoppingListRepository.findById(id).orElse(null) ?: return "redirect:/shopping-lists"
+        val checked = shoppingListItemRepository.findByShoppingList(list).filter { it.checked }
+        shoppingListItemRepository.deleteAll(checked)
+        return "redirect:/shopping-lists/$id"
+    }
+
     @PostMapping("/shopping-lists/{id}/share")
     fun share(@PathVariable id: Long, @RequestParam email: String, session: HttpSession): String {
         val user = currentUser(session) ?: return "redirect:/login"

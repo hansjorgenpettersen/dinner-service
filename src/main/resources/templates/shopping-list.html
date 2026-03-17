@@ -184,6 +184,16 @@
         .back { color: #e67e22; text-decoration: none; font-size: 0.9rem; }
         .back:hover { text-decoration: underline; }
         .list-title { margin: 0.8rem 0; font-size: 1.3rem; color: #2c3e50; }
+        .clear-btn {
+            background: none;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+            padding: 0.35rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .clear-btn:hover { background: #e74c3c; color: white; }
         .empty { color: #aaa; font-style: italic; padding: 0.5rem 0; }
         @media (min-width: 600px) {
             .add-form { flex-direction: row; align-items: flex-end; }
@@ -248,7 +258,12 @@
 
         <!-- Items table -->
         <div class="card">
-            <h2>Items</h2>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                <h2 style="margin:0;">Items</h2>
+                <form th:action="'/shopping-lists/' + ${list.id} + '/items/clear-checked'" method="post">
+                    <button type="submit" class="clear-btn" onclick="return confirm('Are you sure you want to remove all ticked items?')">Remove ticked</button>
+                </form>
+            </div>
             <div th:if="${#lists.isEmpty(items)}" class="empty">No items yet. Add one above.</div>
             <div class="table-wrap" th:if="${not #lists.isEmpty(items)}">
                 <table>
