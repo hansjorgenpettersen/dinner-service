@@ -9,55 +9,59 @@
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f0f0; }
         header {
             background: white;
-            padding: 1rem 2rem;
+            padding: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        header h1 { color: #e67e22; margin: 0; font-size: 1.4rem; }
-        nav a { color: #e67e22; text-decoration: none; margin-right: 1.5rem; font-size: 0.95rem; }
-        nav a:hover { text-decoration: underline; }
+        header h1 { color: #e67e22; margin: 0; font-size: 1.3rem; }
         form.logout button {
             background: none;
             border: 2px solid #e67e22;
             color: #e67e22;
-            padding: 0.4rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9rem;
         }
         form.logout button:hover { background: #e67e22; color: white; }
-        .page { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+        .page { max-width: 700px; margin: 1.5rem auto; padding: 0 1rem; }
         .card {
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            padding: 1.5rem 2rem;
-            margin-bottom: 1.5rem;
+            padding: 1.2rem 1rem;
+            margin-bottom: 1.2rem;
         }
-        .card h2 { color: #2c3e50; margin-top: 0; font-size: 1.2rem; }
+        .card h2 { color: #2c3e50; margin-top: 0; font-size: 1.1rem; }
         .list-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.6rem 0;
+            padding: 0.8rem 0;
             border-bottom: 1px solid #eee;
         }
         .list-item:last-child { border-bottom: none; }
-        .list-item a { color: #e67e22; text-decoration: none; font-weight: bold; }
-        .list-item a:hover { text-decoration: underline; }
+        .list-item a {
+            color: #e67e22;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+        }
         .badge {
             font-size: 0.75rem;
             background: #f0f0f0;
             color: #777;
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
+            white-space: nowrap;
         }
         .new-form { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
         .new-form input {
             flex: 1;
-            padding: 0.6rem 1rem;
+            min-width: 0;
+            padding: 0.75rem 1rem;
             font-size: 1rem;
             border: 2px solid #ddd;
             border-radius: 8px;
@@ -65,31 +69,25 @@
         }
         .new-form input:focus { border-color: #e67e22; }
         .new-form button {
-            padding: 0.6rem 1.2rem;
+            padding: 0.75rem 1.2rem;
             font-size: 1rem;
             background: #e67e22;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            white-space: nowrap;
         }
         .new-form button:hover { background: #cf6d17; }
-        .empty { color: #aaa; font-style: italic; }
+        .empty { color: #aaa; font-style: italic; padding: 0.5rem 0; }
     </style>
 </head>
 <body>
     <header>
         <h1>Dinner Service</h1>
-        <nav>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/shopping-lists">Shopping Lists</a>
-        </nav>
-        <div style="display:flex;align-items:center;gap:1rem;">
-            <span th:text="${email}" style="color:#555;font-size:0.95rem;"></span>
-            <form method="post" action="/logout" class="logout">
-                <button type="submit">Log out</button>
-            </form>
-        </div>
+        <form method="post" action="/logout" class="logout">
+            <button type="submit">Log out</button>
+        </form>
     </header>
 
     <div class="page">

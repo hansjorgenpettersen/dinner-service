@@ -6,26 +6,21 @@
     <title>Dashboard – Dinner Service</title>
     <style>
         * { box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f0f0f0; }
         header {
             background: white;
-            padding: 1rem 2rem;
+            padding: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-        header h1 { color: #e67e22; margin: 0; font-size: 1.4rem; }
-        header span { color: #555; font-size: 0.95rem; }
+        header h1 { color: #e67e22; margin: 0; font-size: 1.3rem; }
         form.logout button {
             background: none;
             border: 2px solid #e67e22;
             color: #e67e22;
-            padding: 0.4rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9rem;
@@ -35,24 +30,35 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 64px);
+            min-height: calc(100vh - 60px);
+            padding: 1rem;
         }
         .card {
             background: white;
-            padding: 3rem;
+            padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.1);
             text-align: center;
+            width: 100%;
+            max-width: 400px;
         }
         .card h2 { color: #2c3e50; }
-        .card p { color: #777; }
+        .card p { color: #777; font-size: 0.95rem; word-break: break-word; }
+        .btn {
+            display: block;
+            margin-top: 1rem;
+            padding: 0.9rem;
+            background: #e67e22;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
     <header>
         <h1>Dinner Service</h1>
-        <nav><a href="/shopping-lists" style="color:#e67e22;text-decoration:none;margin-right:1rem;">Shopping Lists</a></nav>
-        <span th:text="${email}"></span>
         <form method="post" action="/logout" class="logout">
             <button type="submit">Log out</button>
         </form>
@@ -60,10 +66,8 @@
     <div class="content">
         <div class="card">
             <h2>Welcome!</h2>
-            <p>You are logged in as <strong th:text="${email}"></strong>.</p>
-            <a href="/shopping-lists" style="display:inline-block;margin-top:1rem;padding:0.7rem 1.5rem;background:#e67e22;color:white;border-radius:8px;text-decoration:none;font-size:1rem;">
-                Shopping Lists
-            </a>
+            <p>Logged in as <strong th:text="${email}"></strong></p>
+            <a href="/shopping-lists" class="btn">Shopping Lists</a>
         </div>
     </div>
 </body>
