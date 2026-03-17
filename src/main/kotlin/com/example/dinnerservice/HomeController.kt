@@ -30,4 +30,8 @@ class HomeController(private val guestRepository: GuestRepository) {
         model.addAttribute("guests", guestRepository.findAll())
         return "guests"
     }
+
+    @GetMapping("/random")
+    @ResponseBody
+    fun random(): Int = Random.nextInt(1, 10_000)
 }
