@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Lists – Dinner Service</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #f0f0f0; }
+        header {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        header h1 { color: #e67e22; margin: 0; font-size: 1.4rem; }
+        nav a { color: #e67e22; text-decoration: none; margin-right: 1.5rem; font-size: 0.95rem; }
+        nav a:hover { text-decoration: underline; }
+        form.logout button {
+            background: none;
+            border: 2px solid #e67e22;
+            color: #e67e22;
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        form.logout button:hover { background: #e67e22; color: white; }
+        .page { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .card h2 { color: #2c3e50; margin-top: 0; font-size: 1.2rem; }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-item a { color: #e67e22; text-decoration: none; font-weight: bold; }
+        .list-item a:hover { text-decoration: underline; }
+        .badge {
+            font-size: 0.75rem;
+            background: #f0f0f0;
+            color: #777;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+        .new-form { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .new-form input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+        .new-form input:focus { border-color: #e67e22; }
+        .new-form button {
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .new-form button:hover { background: #cf6d17; }
+        .empty { color: #aaa; font-style: italic; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Dinner Service</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/shopping-lists">Shopping Lists</a>
+        </nav>
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <span th:text="${email}" style="color:#555;font-size:0.95rem;"></span>
+            <form method="post" action="/logout" class="logout">
+                <button type="submit">Log out</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="page">
+        <div class="card">
+            <h2>New Shopping List</h2>
+            <form method="post" action="/shopping-lists/new" class="new-form">
+                <input type="text" name="name" placeholder="List name" required />
+                <button type="submit">Create</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>My Lists</h2>
+            <div th:if="${#lists.isEmpty(owned)}" class="empty">No lists yet.</div>
+            <div th:each="list : ${owned}" class="list-item">
+                <a th:href="'/shopping-lists/' + ${list.id}" th:text="${list.name}"></a>
+                <span class="badge">owner</span>
+            </div>
+        </div>
+
+        <div class="card" th:if="${not #lists.isEmpty(shared)}">
+            <h2>Shared with me</h2>
+            <div th:each="list : ${shared}" class="list-item">
+                <a th:href="'/shopping-lists/' + ${list.id}" th:text="${list.name}"></a>
+                <span class="badge" th:text="'by ' + ${list.owner?.email}"></span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
