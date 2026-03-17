@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – Dinner Service</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        header {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        header h1 { color: #e67e22; margin: 0; font-size: 1.4rem; }
+        header span { color: #555; font-size: 0.95rem; }
+        form.logout button {
+            background: none;
+            border: 2px solid #e67e22;
+            color: #e67e22;
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        form.logout button:hover { background: #e67e22; color: white; }
+        .content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 64px);
+        }
+        .card {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .card h2 { color: #2c3e50; }
+        .card p { color: #777; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Dinner Service</h1>
+        <span th:text="${email}"></span>
+        <form method="post" action="/logout" class="logout">
+            <button type="submit">Log out</button>
+        </form>
+    </header>
+    <div class="content">
+        <div class="card">
+            <h2>Welcome!</h2>
+            <p>You are logged in as <strong th:text="${email}"></strong>.</p>
+            <p>More features coming soon.</p>
+        </div>
+    </div>
+</body>
+</html>

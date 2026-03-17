@@ -11,13 +11,6 @@ import kotlin.random.Random
 @Controller
 class HomeController(private val guestRepository: GuestRepository) {
 
-    @GetMapping("/")
-    fun home(model: Model): String {
-        model.addAttribute("randomNumber", Random.nextInt(1, 10_000))
-        model.addAttribute("guests", guestRepository.findAll())
-        return "index"
-    }
-
     @PostMapping("/greet")
     @ResponseBody
     fun greet(@RequestParam name: String): String {
