@@ -1,15 +1,24 @@
 package com.example.dinnerservice
 
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
+import java.time.LocalDateTime
+import java.util.UUID
 
 @Controller
-class AuthController(private val userRepository: UserRepository) {
+class AuthController(
+    private val userRepository: UserRepository,
+    private val resetTokenRepository: PasswordResetTokenRepository,
+    private val mailSender: JavaMailSender
+) {
 
     private val encoder = BCryptPasswordEncoder()
 
@@ -67,6 +76,65 @@ class AuthController(private val userRepository: UserRepository) {
         val hash = encoder.encode(password)
         userRepository.save(User(email = trimmed, passwordHash = hash))
         return "redirect:/login?registered"
+    }
+
+    @GetMapping("/forgot-password")
+    fun forgotPasswordPage(): String = "forgot-password"
+
+    @PostMapping("/forgot-password")
+    fun forgotPassword(@RequestParam email: String, request: HttpServletRequest): String {
+        val trimmed = email.trim().lowercase()
+        val user = userRepository.findByEmail(trimmed).orElse(null)
+
+        // Always show "sent" to avoid revealing whether an email exists
+        if (user != null) {
+            resetTokenRepository.deleteByUser(user)
+            val token = UUID.randomUUID().toString()
+            resetTokenRepository.save(PasswordResetToken(token = token, user = user))
+
+            val baseUrl = "${request.scheme}://${request.serverName}:${request.serverPort}"
+            val resetUrl = "$baseUrl/reset-password?token=$token"
+
+            val message = SimpleMailMessage()
+            message.setTo(user.email)
+            message.subject = "Dinner Service – Password Reset"
+            message.text = "Click the link below to reset your password (expires in 1 hour):\n\n$resetUrl\n\nIf you did not request this, you can ignore this email."
+            mailSender.send(message)
+        }
+
+        return "redirect:/forgot-password?sent"
+    }
+
+    @GetMapping("/reset-password")
+    fun resetPasswordPage(@RequestParam token: String, model: Model): String {
+        val resetToken = resetTokenRepository.findByToken(token).orElse(null)
+        if (resetToken == null || resetToken.expiresAt.isBefore(LocalDateTime.now())) {
+            return "redirect:/forgot-password?expired"
+        }
+        model.addAttribute("token", token)
+        return "reset-password"
+    }
+
+    @PostMapping("/reset-password")
+    fun resetPassword(
+        @RequestParam token: String,
+        @RequestParam password: String,
+        @RequestParam confirmPassword: String
+    ): String {
+        if (password.length < 8) return "redirect:/reset-password?token=$token&error=short"
+        if (password != confirmPassword) return "redirect:/reset-password?token=$token&error=mismatch"
+
+        val resetToken = resetTokenRepository.findByToken(token).orElse(null)
+        if (resetToken == null || resetToken.expiresAt.isBefore(LocalDateTime.now())) {
+            return "redirect:/forgot-password?expired"
+        }
+
+        val user = resetToken.user
+        user.passwordHash = encoder.encode(password)
+        userRepository.save(user)
+        resetTokenRepository.delete(resetToken)
+
+        return "redirect:/login?reset"
     }
 
     @GetMapping("/dashboard")
