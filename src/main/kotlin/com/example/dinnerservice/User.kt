@@ -8,5 +8,7 @@ class User(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
     @Column(unique = true, nullable = false)
-    val email: String = ""
+    val email: String = "",
+    @Column(nullable = true)
+    var passwordHash: String? = null
 )
