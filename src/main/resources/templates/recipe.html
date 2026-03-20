@@ -149,6 +149,20 @@
             flex-shrink: 0;
         }
         .delete-btn:hover { background: #e74c3c; color: white; }
+        .add-to-list-btn {
+            background: none;
+            border: 2px solid #27ae60;
+            color: #27ae60;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            line-height: 1;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .add-to-list-btn:hover { background: #27ae60; color: white; }
+        .add-to-list-btn:disabled { border-color: #ccc; color: #ccc; cursor: default; }
 
         /* Add ingredient form */
         .add-form {
@@ -242,7 +256,16 @@
 
         <!-- Ingredients -->
         <div class="card">
-            <h2>Ingredients</h2>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem;">
+                <h2 style="margin:0;">Ingredients</h2>
+                <div th:if="${!#lists.isEmpty(shoppingLists)}" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <label style="font-size:0.85rem;color:#777;white-space:nowrap;">Add to list:</label>
+                    <select id="list-select" onchange="updateListForms()" style="padding:0.4rem 0.6rem;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;outline:none;background:white;cursor:pointer;">
+                        <option value="">Select list…</option>
+                        <option th:each="sl : ${shoppingLists}" th:value="${sl.id}" th:text="${sl.name}"></option>
+                    </select>
+                </div>
+            </div>
             <div th:if="${#lists.isEmpty(ingredients)}" class="empty">No ingredients yet.</div>
             <div th:each="ing : ${ingredients}" class="ingredient-item">
                 <div class="color-dot"
@@ -250,6 +273,12 @@
                 <span class="ing-name" th:text="${ing.product?.name}"></span>
                 <span class="ing-qty"
                       th:text="${ing.quantity != null ? #numbers.formatDecimal(ing.quantity, 1, 2) + ' ' + ing.unit : ing.unit}"></span>
+                <form th:if="${!#lists.isEmpty(shoppingLists)}"
+                      th:action="'/recipes/' + ${recipe.id} + '/ingredients/' + ${ing.id} + '/add-to-list'" method="post"
+                      class="add-to-list-form">
+                    <input type="hidden" name="listId" class="list-id-input" value="" />
+                    <button type="submit" class="add-to-list-btn" title="Add to shopping list">+</button>
+                </form>
                 <form th:action="'/recipes/' + ${recipe.id} + '/ingredients/' + ${ing.id} + '/delete'" method="post">
                     <button class="delete-btn" type="submit">🗑</button>
                 </form>
@@ -278,6 +307,21 @@
             document.getElementById('view-section').style.display =
                 document.getElementById('edit-section').classList.contains('open') ? 'none' : '';
         }
+
+        function updateListForms() {
+            const listId = document.getElementById('list-select').value;
+            document.querySelectorAll('.list-id-input').forEach(input => {
+                input.value = listId;
+            });
+            document.querySelectorAll('.add-to-list-btn').forEach(btn => {
+                btn.disabled = !listId;
+            });
+        }
+
+        // Disable + buttons until a list is selected
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.add-to-list-btn').forEach(btn => btn.disabled = true);
+        });
     </script>
 </body>
 </html>

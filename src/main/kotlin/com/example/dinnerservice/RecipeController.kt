@@ -10,11 +10,19 @@ import org.springframework.web.bind.annotation.*
 class RecipeController(
     private val recipeRepository: RecipeRepository,
     private val recipeIngredientRepository: RecipeIngredientRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val shoppingListRepository: ShoppingListRepository,
+    private val shoppingListItemRepository: ShoppingListItemRepository,
+    private val userRepository: UserRepository
 ) {
 
     companion object {
         val UNITS = listOf("pcs", "g", "kg", "ml", "dl", "L", "tsp", "tbsp", "cup")
+    }
+
+    private fun currentUser(session: HttpSession): User? {
+        val email = session.getAttribute("email") as? String ?: return null
+        return userRepository.findByEmail(email).orElse(null)
     }
 
     @GetMapping("/recipes")
@@ -37,12 +45,15 @@ class RecipeController(
 
     @GetMapping("/recipes/{id}")
     fun view(@PathVariable id: Long, session: HttpSession, model: Model): String {
-        session.getAttribute("email") ?: return "redirect:/login"
+        val user = currentUser(session) ?: return "redirect:/login"
         val recipe = recipeRepository.findById(id).orElse(null) ?: return "redirect:/recipes"
+        val owned = shoppingListRepository.findByOwner(user)
+        val shared = shoppingListRepository.findBySharedWithContaining(user)
         model.addAttribute("recipe", recipe)
         model.addAttribute("ingredients", recipeIngredientRepository.findByRecipe(recipe))
         model.addAttribute("products", productRepository.findAll().sortedBy { it.name.lowercase() })
         model.addAttribute("units", UNITS)
+        model.addAttribute("shoppingLists", (owned + shared).sortedBy { it.name.lowercase() })
         return "recipe"
     }
 
@@ -94,6 +105,36 @@ class RecipeController(
     ): String {
         session.getAttribute("email") ?: return "redirect:/login"
         recipeIngredientRepository.deleteById(ingId)
+        return "redirect:/recipes/$id"
+    }
+
+    @PostMapping("/recipes/{id}/ingredients/{ingId}/add-to-list")
+    fun addIngredientToList(
+        @PathVariable id: Long,
+        @PathVariable ingId: Long,
+        @RequestParam listId: Long,
+        session: HttpSession
+    ): String {
+        val user = currentUser(session) ?: return "redirect:/login"
+        val list = shoppingListRepository.findById(listId).orElse(null) ?: return "redirect:/recipes/$id"
+        if (list.owner?.id != user.id && !list.sharedWith.any { it.id == user.id }) {
+            return "redirect:/recipes/$id"
+        }
+        val ingredient = recipeIngredientRepository.findById(ingId).orElse(null) ?: return "redirect:/recipes/$id"
+        val productName = ingredient.product?.name ?: return "redirect:/recipes/$id"
+        val product = productRepository.findByNameIgnoreCase(productName).orElseGet {
+            productRepository.save(Product(name = productName, price = ingredient.product?.price))
+        }
+        shoppingListItemRepository.save(
+            ShoppingListItem(
+                name = productName,
+                count = ingredient.quantity,
+                unitPrice = ingredient.product?.price,
+                category = product.category,
+                addedBy = user,
+                shoppingList = list
+            )
+        )
         return "redirect:/recipes/$id"
     }
 }
