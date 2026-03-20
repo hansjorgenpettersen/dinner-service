@@ -72,6 +72,29 @@
         }
         .leave-btn:hover { background: #e74c3c; color: white; }
         .empty { color: #aaa; font-style: italic; padding: 0.5rem 0; }
+        .default-form { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.3rem; }
+        .default-form select {
+            flex: 1;
+            min-width: 0;
+            padding: 0.7rem 0.8rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            background: white;
+        }
+        .default-form select:focus { border-color: #e67e22; }
+        .default-form button {
+            padding: 0.7rem 1.2rem;
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            white-space: nowrap;
+        }
+        .default-form button:hover { background: #cf6d17; }
         .logout-btn {
             width: 100%;
             padding: 0.8rem;
@@ -104,6 +127,21 @@
         <div class="card">
             <h2>Account</h2>
             <div class="email" th:text="${email}"></div>
+        </div>
+
+        <!-- Default list -->
+        <div class="card">
+            <h2>Default list after login</h2>
+            <form method="post" action="/user/set-default-list" class="default-form">
+                <select name="listId">
+                    <option value="">None (go to dashboard)</option>
+                    <option th:each="list : ${allLists}"
+                            th:value="${list.id}"
+                            th:text="${list.name}"
+                            th:selected="${list.id == defaultListId}"></option>
+                </select>
+                <button type="submit">Save</button>
+            </form>
         </div>
 
         <!-- Shared lists -->

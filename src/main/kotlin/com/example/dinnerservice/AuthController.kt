@@ -51,7 +51,8 @@ class AuthController(
         }
 
         session.setAttribute("email", trimmed)
-        return "redirect:/dashboard"
+        val redirect = user.defaultListId?.let { "/shopping-lists/$it" } ?: "/dashboard"
+        return "redirect:$redirect"
     }
 
     @GetMapping("/register")
