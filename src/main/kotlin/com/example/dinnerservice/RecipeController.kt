@@ -128,7 +128,7 @@ class RecipeController(
         shoppingListItemRepository.save(
             ShoppingListItem(
                 name = productName,
-                count = ingredient.quantity,
+                count = ingredient.quantity ?: 1.0,
                 unitPrice = ingredient.product?.price,
                 category = product.category,
                 addedBy = user,
