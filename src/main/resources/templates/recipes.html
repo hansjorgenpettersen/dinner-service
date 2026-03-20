@@ -146,7 +146,7 @@
                 </div>
                 <form th:action="'/recipes/' + ${recipe.id} + '/delete'" method="post">
                     <button class="delete-btn" type="submit"
-                            th:onclick="'return confirm(\'Delete ' + ${recipe.name} + '?\')'">🗑</button>
+                            onclick="return confirm('Delete this recipe?')">🗑</button>
                 </form>
             </div>
         </div>

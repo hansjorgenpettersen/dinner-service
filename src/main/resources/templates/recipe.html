@@ -249,7 +249,7 @@
                      th:style="'background:' + (${ing.product?.category?.color} ?: '#eee')"></div>
                 <span class="ing-name" th:text="${ing.product?.name}"></span>
                 <span class="ing-qty"
-                      th:text="${ing.quantity != null ? #numbers.formatDecimal(ing.quantity, 1, 'DEFAULT', 2, 'DEFAULT') + ' ' + ing.unit : ing.unit}"></span>
+                      th:text="${ing.quantity != null ? #numbers.formatDecimal(ing.quantity, 1, 2) + ' ' + ing.unit : ing.unit}"></span>
                 <form th:action="'/recipes/' + ${recipe.id} + '/ingredients/' + ${ing.id} + '/delete'" method="post">
                     <button class="delete-btn" type="submit">🗑</button>
                 </form>
