@@ -2,22 +2,34 @@ package com.example.dinnerservice
 
 import jakarta.servlet.http.HttpSession
 import jakarta.transaction.Transactional
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.FileSystemResource
+import org.springframework.core.io.Resource
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.util.UUID
 
 @Controller
 class RecipeController(
     private val recipeRepository: RecipeRepository,
     private val recipeIngredientRepository: RecipeIngredientRepository,
+    private val recipeImageRepository: RecipeImageRepository,
     private val productRepository: ProductRepository,
     private val shoppingListRepository: ShoppingListRepository,
     private val shoppingListItemRepository: ShoppingListItemRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    @Value("\${app.upload-dir}") private val uploadDir: String
 ) {
 
     companion object {
         val UNITS = listOf("pcs", "g", "kg", "ml", "dl", "L", "tsp", "tbsp", "cup")
+        val ALLOWED_TYPES = setOf("image/jpeg", "image/png", "image/webp", "image/gif")
     }
 
     private fun currentUser(session: HttpSession): User? {
@@ -71,6 +83,7 @@ class RecipeController(
 
         model.addAttribute("recipe", recipe)
         model.addAttribute("ingredients", ingredients)
+        model.addAttribute("images", recipeImageRepository.findByRecipe(recipe))
         model.addAttribute("products", productRepository.findAll().sortedBy { it.name.lowercase() })
         model.addAttribute("units", UNITS)
         model.addAttribute("shoppingLists", shoppingLists)
@@ -110,8 +123,60 @@ class RecipeController(
         session.getAttribute("email") ?: return "redirect:/login"
         val recipe = recipeRepository.findById(id).orElse(null) ?: return "redirect:/recipes"
         recipeIngredientRepository.deleteByRecipe(recipe)
+        recipeImageRepository.findByRecipe(recipe).forEach { deleteImageFile(it.filename) }
+        recipeImageRepository.deleteByRecipe(recipe)
         recipeRepository.deleteById(id)
         return "redirect:/recipes"
+    }
+
+    @GetMapping("/recipe-images/{filename}")
+    @ResponseBody
+    fun serveImage(@PathVariable filename: String): ResponseEntity<Resource> {
+        val file = Paths.get(uploadDir, "recipe-images", filename)
+        if (!Files.exists(file)) return ResponseEntity.notFound().build()
+        val contentType = Files.probeContentType(file) ?: "application/octet-stream"
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(contentType))
+            .body(FileSystemResource(file))
+    }
+
+    @PostMapping("/recipes/{id}/images")
+    fun uploadImages(
+        @PathVariable id: Long,
+        @RequestParam("files") files: List<MultipartFile>,
+        session: HttpSession
+    ): String {
+        session.getAttribute("email") ?: return "redirect:/login"
+        val recipe = recipeRepository.findById(id).orElse(null) ?: return "redirect:/recipes"
+        val dir = Paths.get(uploadDir, "recipe-images")
+        Files.createDirectories(dir)
+        files.filter { !it.isEmpty && it.contentType in ALLOWED_TYPES }.forEach { file ->
+            val ext = file.originalFilename?.substringAfterLast('.', "jpg") ?: "jpg"
+            val filename = "${UUID.randomUUID()}.$ext"
+            Files.copy(file.inputStream, dir.resolve(filename))
+            recipeImageRepository.save(
+                RecipeImage(recipe = recipe, filename = filename, originalName = file.originalFilename ?: filename)
+            )
+        }
+        return "redirect:/recipes/$id"
+    }
+
+    @PostMapping("/recipes/{id}/images/{imageId}/delete")
+    fun deleteImage(
+        @PathVariable id: Long,
+        @PathVariable imageId: Long,
+        session: HttpSession
+    ): String {
+        session.getAttribute("email") ?: return "redirect:/login"
+        val image = recipeImageRepository.findById(imageId).orElse(null) ?: return "redirect:/recipes/$id"
+        deleteImageFile(image.filename)
+        recipeImageRepository.deleteById(imageId)
+        return "redirect:/recipes/$id"
+    }
+
+    private fun deleteImageFile(filename: String) {
+        val file = Paths.get(uploadDir, "recipe-images", filename)
+        Files.deleteIfExists(file)
     }
 
     @PostMapping("/recipes/{id}/ingredients")
