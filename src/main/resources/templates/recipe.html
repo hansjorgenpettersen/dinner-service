@@ -262,7 +262,56 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            cursor: zoom-in;
         }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox.open { display: flex; }
+        .lightbox img {
+            max-width: 92vw;
+            max-height: 88vh;
+            border-radius: 8px;
+            object-fit: contain;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        }
+        .lightbox-close {
+            position: fixed;
+            top: 1rem; right: 1rem;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+        .lightbox-prev, .lightbox-next {
+            position: fixed;
+            top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lightbox-prev:hover, .lightbox-next:hover { background: rgba(255,255,255,0.3); }
+        .lightbox-prev { left: 1rem; }
+        .lightbox-next { right: 1rem; }
+        .lightbox-prev.hidden, .lightbox-next.hidden { display: none; }
         .image-wrap .img-delete {
             position: absolute;
             top: 4px; right: 4px;
@@ -320,6 +369,14 @@
         </nav>
     </header>
 
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightboxOnBackdrop(event)">
+        <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+        <button class="lightbox-prev" id="lb-prev" onclick="lightboxNav(-1)">&#8249;</button>
+        <img id="lightbox-img" src="" alt="" />
+        <button class="lightbox-next" id="lb-next" onclick="lightboxNav(1)">&#8250;</button>
+    </div>
+
     <div class="page">
 
         <!-- Recipe name & description -->
@@ -367,7 +424,8 @@
             <h2 style="margin-bottom:0.8rem;">Photos</h2>
             <div th:if="${!#lists.isEmpty(images)}" class="image-grid">
                 <div th:each="img : ${images}" class="image-wrap">
-                    <img th:src="'/recipe-images/' + ${img.filename}" th:alt="${img.originalName}" loading="lazy" />
+                    <img th:src="'/recipe-images/' + ${img.filename}" th:alt="${img.originalName}"
+                         loading="lazy" onclick="openLightbox(this)" />
                     <form th:action="'/recipes/' + ${recipe.id} + '/images/' + ${img.id} + '/delete'" method="post">
                         <button class="img-delete" type="submit" title="Delete photo">✕</button>
                     </form>
@@ -469,6 +527,39 @@
                 btn.style.display = 'none';
             }
         }
+
+        // Lightbox
+        let lbImages = [], lbIndex = 0;
+        function openLightbox(img) {
+            lbImages = Array.from(document.querySelectorAll('.image-grid .image-wrap img'));
+            lbIndex = lbImages.indexOf(img);
+            showLightboxImage();
+            document.getElementById('lightbox').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function showLightboxImage() {
+            document.getElementById('lightbox-img').src = lbImages[lbIndex].src;
+            document.getElementById('lightbox-img').alt = lbImages[lbIndex].alt;
+            document.getElementById('lb-prev').classList.toggle('hidden', lbIndex === 0);
+            document.getElementById('lb-next').classList.toggle('hidden', lbIndex === lbImages.length - 1);
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        function closeLightboxOnBackdrop(e) {
+            if (e.target === document.getElementById('lightbox')) closeLightbox();
+        }
+        function lightboxNav(dir) {
+            lbIndex = Math.max(0, Math.min(lbImages.length - 1, lbIndex + dir));
+            showLightboxImage();
+        }
+        document.addEventListener('keydown', e => {
+            if (!document.getElementById('lightbox').classList.contains('open')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') lightboxNav(-1);
+            if (e.key === 'ArrowRight') lightboxNav(1);
+        });
 
         // Drag and drop support
         const uploadArea = document.querySelector('.upload-area');
