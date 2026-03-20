@@ -49,12 +49,46 @@ class RecipeController(
         val recipe = recipeRepository.findById(id).orElse(null) ?: return "redirect:/recipes"
         val owned = shoppingListRepository.findByOwner(user)
         val shared = shoppingListRepository.findBySharedWithContaining(user)
+        val shoppingLists = (owned + shared).sortedBy { it.name.lowercase() }
+
+        val selectedListId = session.getAttribute("selectedListId") as? Long
+        val selectedList = selectedListId?.let { lid ->
+            shoppingLists.find { it.id == lid }
+        }
+
+        val ingredients = recipeIngredientRepository.findByRecipe(recipe)
+
+        // Build map of ingredientId -> current count in selected list
+        val ingredientCounts: Map<Long, Int> = if (selectedList != null) {
+            val listItems = shoppingListItemRepository.findByShoppingList(selectedList)
+            ingredients.associate { ing ->
+                val count = listItems
+                    .find { it.name.equals(ing.product?.name, ignoreCase = true) }
+                    ?.count?.toInt() ?: 0
+                ing.id to count
+            }
+        } else emptyMap()
+
         model.addAttribute("recipe", recipe)
-        model.addAttribute("ingredients", recipeIngredientRepository.findByRecipe(recipe))
+        model.addAttribute("ingredients", ingredients)
         model.addAttribute("products", productRepository.findAll().sortedBy { it.name.lowercase() })
         model.addAttribute("units", UNITS)
-        model.addAttribute("shoppingLists", (owned + shared).sortedBy { it.name.lowercase() })
+        model.addAttribute("shoppingLists", shoppingLists)
+        model.addAttribute("selectedListId", selectedListId)
+        model.addAttribute("ingredientCounts", ingredientCounts)
         return "recipe"
+    }
+
+    @PostMapping("/recipes/{id}/select-list")
+    fun selectList(
+        @PathVariable id: Long,
+        @RequestParam(required = false) listId: Long?,
+        session: HttpSession
+    ): String {
+        session.getAttribute("email") ?: return "redirect:/login"
+        if (listId != null) session.setAttribute("selectedListId", listId)
+        else session.removeAttribute("selectedListId")
+        return "redirect:/recipes/$id"
     }
 
     @PostMapping("/recipes/{id}/edit")
@@ -112,29 +146,42 @@ class RecipeController(
     fun addIngredientToList(
         @PathVariable id: Long,
         @PathVariable ingId: Long,
-        @RequestParam listId: Long,
         session: HttpSession
     ): String {
         val user = currentUser(session) ?: return "redirect:/login"
+        val listId = session.getAttribute("selectedListId") as? Long ?: return "redirect:/recipes/$id"
         val list = shoppingListRepository.findById(listId).orElse(null) ?: return "redirect:/recipes/$id"
         if (list.owner?.id != user.id && !list.sharedWith.any { it.id == user.id }) {
             return "redirect:/recipes/$id"
         }
         val ingredient = recipeIngredientRepository.findById(ingId).orElse(null) ?: return "redirect:/recipes/$id"
         val productName = ingredient.product?.name ?: return "redirect:/recipes/$id"
-        val product = productRepository.findByNameIgnoreCase(productName).orElseGet {
-            productRepository.save(Product(name = productName, price = ingredient.product?.price))
-        }
-        shoppingListItemRepository.save(
-            ShoppingListItem(
-                name = productName,
-                count = ingredient.quantity ?: 1.0,
-                unitPrice = ingredient.product?.price,
-                category = product.category,
-                addedBy = user,
-                shoppingList = list
+
+        val existing = shoppingListItemRepository.findByShoppingList(list)
+            .find { it.name.equals(productName, ignoreCase = true) }
+
+        if (existing != null) {
+            shoppingListItemRepository.save(
+                ShoppingListItem(
+                    id = existing.id, name = existing.name,
+                    count = (existing.count ?: 0.0) + 1.0,
+                    unitPrice = existing.unitPrice, checked = existing.checked,
+                    category = existing.category, addedBy = existing.addedBy,
+                    shoppingList = existing.shoppingList
+                )
             )
-        )
+        } else {
+            val product = productRepository.findByNameIgnoreCase(productName).orElseGet {
+                productRepository.save(Product(name = productName, price = ingredient.product?.price))
+            }
+            shoppingListItemRepository.save(
+                ShoppingListItem(
+                    name = productName, count = 1.0,
+                    unitPrice = ingredient.product?.price,
+                    category = product.category, addedBy = user, shoppingList = list
+                )
+            )
+        }
         return "redirect:/recipes/$id"
     }
 }

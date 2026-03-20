@@ -114,6 +114,26 @@
         }
         .empty-desc { color: #aaa; font-style: italic; }
 
+        /* List selector */
+        .list-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .list-selector label { font-size: 0.85rem; color: #777; white-space: nowrap; }
+        .list-selector select {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.9rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            background: white;
+            cursor: pointer;
+        }
+        .list-selector select:focus { border-color: #e67e22; }
+        .list-selector select.active { border-color: #27ae60; }
+
         /* Ingredients */
         .ingredient-item {
             display: flex;
@@ -121,7 +141,6 @@
             gap: 0.5rem;
             padding: 0.7rem 0;
             border-bottom: 1px solid #eee;
-            flex-wrap: wrap;
         }
         .ingredient-item:last-child { border-bottom: none; }
         .color-dot {
@@ -129,14 +148,21 @@
             border-radius: 50%;
             flex-shrink: 0;
         }
-        .ing-name { font-weight: bold; color: #2c3e50; flex: 1; min-width: 100px; }
+        .ing-name { font-weight: bold; color: #2c3e50; flex: 1; min-width: 80px; }
         .ing-qty {
             color: #666;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             background: #f5f5f5;
             border-radius: 6px;
-            padding: 0.2rem 0.6rem;
+            padding: 0.2rem 0.55rem;
             white-space: nowrap;
+        }
+        .count-badge {
+            min-width: 28px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #27ae60;
         }
         .delete-btn {
             background: none;
@@ -154,15 +180,14 @@
             border: 2px solid #27ae60;
             color: #27ae60;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: bold;
             line-height: 1;
-            padding: 0.2rem 0.5rem;
+            padding: 0.15rem 0.5rem;
             border-radius: 6px;
             flex-shrink: 0;
         }
         .add-to-list-btn:hover { background: #27ae60; color: white; }
-        .add-to-list-btn:disabled { border-color: #ccc; color: #ccc; cursor: default; }
 
         /* Add ingredient form */
         .add-form {
@@ -256,16 +281,23 @@
 
         <!-- Ingredients -->
         <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;flex-wrap:wrap;gap:0.5rem;">
-                <h2 style="margin:0;">Ingredients</h2>
-                <div th:if="${!#lists.isEmpty(shoppingLists)}" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                    <label style="font-size:0.85rem;color:#777;white-space:nowrap;">Add to list:</label>
-                    <select id="list-select" onchange="updateListForms()" style="padding:0.4rem 0.6rem;font-size:0.9rem;border:2px solid #ddd;border-radius:8px;outline:none;background:white;cursor:pointer;">
-                        <option value="">Select list…</option>
-                        <option th:each="sl : ${shoppingLists}" th:value="${sl.id}" th:text="${sl.name}"></option>
-                    </select>
+            <div class="card-header">
+                <h2>Ingredients</h2>
+                <div th:if="${!#lists.isEmpty(shoppingLists)}" class="list-selector">
+                    <label>Add to list:</label>
+                    <form th:action="'/recipes/' + ${recipe.id} + '/select-list'" method="post">
+                        <select name="listId" onchange="this.form.submit()"
+                                th:classappend="${selectedListId != null} ? 'active' : ''">
+                            <option value="">Select list…</option>
+                            <option th:each="sl : ${shoppingLists}"
+                                    th:value="${sl.id}"
+                                    th:text="${sl.name}"
+                                    th:selected="${sl.id == selectedListId}"></option>
+                        </select>
+                    </form>
                 </div>
             </div>
+
             <div th:if="${#lists.isEmpty(ingredients)}" class="empty">No ingredients yet.</div>
             <div th:each="ing : ${ingredients}" class="ingredient-item">
                 <div class="color-dot"
@@ -273,12 +305,17 @@
                 <span class="ing-name" th:text="${ing.product?.name}"></span>
                 <span class="ing-qty"
                       th:text="${ing.quantity != null ? #numbers.formatDecimal(ing.quantity, 1, 2) + ' ' + ing.unit : ing.unit}"></span>
-                <form th:if="${!#lists.isEmpty(shoppingLists)}"
-                      th:action="'/recipes/' + ${recipe.id} + '/ingredients/' + ${ing.id} + '/add-to-list'" method="post"
-                      class="add-to-list-form">
-                    <input type="hidden" name="listId" class="list-id-input" value="" />
-                    <button type="submit" class="add-to-list-btn" title="Add to shopping list">+</button>
-                </form>
+
+                <!-- + button and count (only when a list is selected) -->
+                <th:block th:if="${selectedListId != null}">
+                    <form th:action="'/recipes/' + ${recipe.id} + '/ingredients/' + ${ing.id} + '/add-to-list'" method="post"
+                          style="display:flex;align-items:center;gap:0.35rem;">
+                        <button type="submit" class="add-to-list-btn" title="Add to shopping list">+</button>
+                        <span class="count-badge"
+                              th:text="${ingredientCounts[ing.id] != null and ingredientCounts[ing.id] > 0 ? ingredientCounts[ing.id] : ''}"></span>
+                    </form>
+                </th:block>
+
                 <form th:action="'/recipes/' + ${recipe.id} + '/ingredients/' + ${ing.id} + '/delete'" method="post">
                     <button class="delete-btn" type="submit">🗑</button>
                 </form>
@@ -307,21 +344,6 @@
             document.getElementById('view-section').style.display =
                 document.getElementById('edit-section').classList.contains('open') ? 'none' : '';
         }
-
-        function updateListForms() {
-            const listId = document.getElementById('list-select').value;
-            document.querySelectorAll('.list-id-input').forEach(input => {
-                input.value = listId;
-            });
-            document.querySelectorAll('.add-to-list-btn').forEach(btn => {
-                btn.disabled = !listId;
-            });
-        }
-
-        // Disable + buttons until a list is selected
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.add-to-list-btn').forEach(btn => btn.disabled = true);
-        });
     </script>
 </body>
 </html>
