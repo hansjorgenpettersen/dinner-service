@@ -131,6 +131,41 @@ class RecipeController(
         return "redirect:/recipes/$id"
     }
 
+    @PostMapping("/recipes/{id}/ingredients/{ingId}/remove-from-list")
+    fun removeIngredientFromList(
+        @PathVariable id: Long,
+        @PathVariable ingId: Long,
+        session: HttpSession
+    ): String {
+        val user = currentUser(session) ?: return "redirect:/login"
+        val listId = session.getAttribute("selectedListId") as? Long ?: return "redirect:/recipes/$id"
+        val list = shoppingListRepository.findById(listId).orElse(null) ?: return "redirect:/recipes/$id"
+        if (list.owner?.id != user.id && !list.sharedWith.any { it.id == user.id }) {
+            return "redirect:/recipes/$id"
+        }
+        val ingredient = recipeIngredientRepository.findById(ingId).orElse(null) ?: return "redirect:/recipes/$id"
+        val productName = ingredient.product?.name ?: return "redirect:/recipes/$id"
+
+        val existing = shoppingListItemRepository.findByShoppingList(list)
+            .find { it.name.equals(productName, ignoreCase = true) }
+            ?: return "redirect:/recipes/$id"
+
+        val newCount = (existing.count ?: 1.0) - 1.0
+        if (newCount <= 0) {
+            shoppingListItemRepository.delete(existing)
+        } else {
+            shoppingListItemRepository.save(
+                ShoppingListItem(
+                    id = existing.id, name = existing.name, count = newCount,
+                    unitPrice = existing.unitPrice, checked = existing.checked,
+                    category = existing.category, addedBy = existing.addedBy,
+                    shoppingList = existing.shoppingList
+                )
+            )
+        }
+        return "redirect:/recipes/$id"
+    }
+
     @PostMapping("/recipes/{id}/ingredients/{ingId}/delete")
     fun deleteIngredient(
         @PathVariable id: Long,
