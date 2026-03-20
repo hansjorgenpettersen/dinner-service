@@ -22,6 +22,16 @@ class ProductController(
         return "products"
     }
 
+    @GetMapping("/products/uncategorized")
+    fun uncategorized(session: HttpSession, model: Model): String {
+        session.getAttribute("email") ?: return "redirect:/login"
+        model.addAttribute("products", productRepository.findAll()
+            .filter { it.category == null }
+            .sortedBy { it.name.lowercase() })
+        model.addAttribute("categories", categoryRepository.findAll().sortedBy { it.name.lowercase() })
+        return "uncategorized-products"
+    }
+
     @PostMapping("/products/new")
     fun create(
         @RequestParam name: String,
