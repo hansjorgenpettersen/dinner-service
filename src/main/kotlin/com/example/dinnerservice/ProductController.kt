@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.*
 @Controller
 class ProductController(
     private val productRepository: ProductRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val shoppingListItemRepository: ShoppingListItemRepository
 ) {
 
     @GetMapping("/products")
@@ -49,7 +50,15 @@ class ProductController(
         session.getAttribute("email") ?: return "redirect:/login"
         val product = productRepository.findById(id).orElse(null) ?: return "redirect:/products"
         val category = categoryId?.let { categoryRepository.findById(it).orElse(null) }
-        productRepository.save(Product(id = product.id, name = name.trim(), price = price, category = category))
+        val trimmedName = name.trim()
+        productRepository.save(Product(id = product.id, name = trimmedName, price = price, category = category))
+        shoppingListItemRepository.findByNameIgnoreCase(trimmedName).forEach { item ->
+            shoppingListItemRepository.save(
+                ShoppingListItem(id = item.id, name = item.name, count = item.count,
+                    unitPrice = item.unitPrice, checked = item.checked, category = category,
+                    addedBy = item.addedBy, shoppingList = item.shoppingList)
+            )
+        }
         return "redirect:/products"
     }
 
