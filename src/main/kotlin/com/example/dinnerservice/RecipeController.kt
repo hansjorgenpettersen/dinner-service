@@ -40,7 +40,12 @@ class RecipeController(
     @GetMapping("/recipes")
     fun list(session: HttpSession, model: Model): String {
         session.getAttribute("email") ?: return "redirect:/login"
-        model.addAttribute("recipes", recipeRepository.findAll().sortedBy { it.name.lowercase() })
+        val recipes = recipeRepository.findAll().sortedBy { it.name.lowercase() }
+        val previewImages = recipes.associate { recipe ->
+            recipe.id to recipeImageRepository.findByRecipe(recipe).firstOrNull()?.filename
+        }
+        model.addAttribute("recipes", recipes)
+        model.addAttribute("previewImages", previewImages)
         return "recipes"
     }
 
