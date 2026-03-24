@@ -133,13 +133,13 @@ Replace the entire file with this skeleton after `shadcn init`. CSS variable ove
   :root {
     /* shadcn requires HSL channel triplets (H S% L%) — no hsl() wrapper.
        Components reference these as hsl(var(--primary)) etc. */
-    --background: 33 80% 96%;        /* #fdf6ee */
+    --background: 32 79% 96%;        /* #fdf6ee */
     --foreground: 26 77% 14%;        /* #3d1f08 */
     --card: 0 0% 100%;               /* #ffffff */
     --card-foreground: 26 77% 14%;   /* #3d1f08 */
     --border: 34 61% 77%;            /* #e8c9a0 */
     --primary: 24 65% 48%;           /* #c96a2b */
-    --primary-foreground: 33 100% 97%; /* #fff8f0 */
+    --primary-foreground: 32 100% 97%; /* #fff8f0 */
     --muted-foreground: 32 36% 35%;  /* #7a5c3a */
     --destructive: 0 72% 51%;        /* #dc2626 */
     --destructive-foreground: 0 0% 100%;
