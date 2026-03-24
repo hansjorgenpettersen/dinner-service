@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn requires HSL channel triplets — consumed as hsl(var(--primary)) */
+    --background: 32 79% 96%;          /* #fdf6ee */
+    --foreground: 26 77% 14%;          /* #3d1f08 */
+    --card: 0 0% 100%;                 /* #ffffff */
+    --card-foreground: 26 77% 14%;     /* #3d1f08 */
+    --border: 34 61% 77%;              /* #e8c9a0 */
+    --primary: 24 65% 48%;             /* #c96a2b */
+    --primary-foreground: 32 100% 97%; /* #fff8f0 */
+    --muted-foreground: 32 36% 35%;    /* #7a5c3a */
+    --destructive: 0 72% 51%;          /* #dc2626 */
+    --destructive-foreground: 0 0% 100%;
+    --radius: 0.5rem;
+    --input: 34 61% 77%;
+    --ring: 24 65% 48%;
+  }
+
+  body {
+    @apply bg-[#fdf6ee] text-[#3d1f08];
+  }
+}
