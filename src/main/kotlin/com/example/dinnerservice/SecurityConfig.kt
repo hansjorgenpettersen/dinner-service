@@ -30,16 +30,13 @@ class SecurityConfig(private val jwtFilter: JwtFilter) {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers(
-                        "/api/auth/**",
-                        "/api/recipe-images/**",
-                        "/actuator/info",
-                        "/",
-                        "/index.html",
-                        "/assets/**",
-                        "/favicon.ico"
-                    ).permitAll()
-                    .anyRequest().authenticated()
+                    // Public API endpoints
+                    .requestMatchers("/api/auth/**", "/api/recipe-images/**", "/actuator/info").permitAll()
+                    // All other /api/** endpoints require authentication
+                    .requestMatchers("/api/**").authenticated()
+                    // Everything else (static files, SPA routes) is public —
+                    // the React client handles auth redirects via ProtectedRoute
+                    .anyRequest().permitAll()
             }
             // Return 401 (not 403) for unauthenticated requests
             .exceptionHandling { ex ->
