@@ -1,54 +1,52 @@
 package com.example.dinnerservice
 
-import jakarta.servlet.http.HttpSession
-import org.springframework.stereotype.Controller
-import org.springframework.ui.Model
+import jakarta.validation.Valid
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
-@Controller
+@RestController
+@RequestMapping("/api/user")
 class UserController(
     private val userRepository: UserRepository,
-    private val shoppingListRepository: ShoppingListRepository
+    private val shoppingListRepository: ShoppingListRepository,
+    private val currentUserService: CurrentUserService
 ) {
+    private fun ShoppingList.toSummary() = ShoppingListSummaryDto(id, name, owner?.email)
 
-    private fun currentUser(session: HttpSession): User? {
-        val email = session.getAttribute("email") as? String ?: return null
-        return userRepository.findByEmail(email).orElse(null)
-    }
-
-    @GetMapping("/user")
-    fun userPage(session: HttpSession, model: Model): String {
-        val user = currentUser(session) ?: return "redirect:/login"
+    @GetMapping
+    fun profile(): ResponseEntity<UserProfileDto> {
+        val user = currentUserService.currentUser()
         val owned = shoppingListRepository.findByOwner(user)
         val shared = shoppingListRepository.findBySharedWithContaining(user)
-        model.addAttribute("email", user.email)
-        model.addAttribute("allLists", (owned + shared).sortedBy { it.name.lowercase() })
-        model.addAttribute("sharedLists", shared)
-        model.addAttribute("defaultListId", user.defaultListId)
-        return "user"
+        return ResponseEntity.ok(
+            UserProfileDto(
+                email = user.email,
+                defaultListId = user.defaultListId,
+                allLists = (owned + shared).sortedBy { it.name.lowercase() }.map { it.toSummary() },
+                sharedLists = shared.map { it.toSummary() }
+            )
+        )
     }
 
-    @PostMapping("/user/set-default-list")
-    fun setDefaultList(
-        @RequestParam(required = false) listId: Long?,
-        session: HttpSession
-    ): String {
-        val user = currentUser(session) ?: return "redirect:/login"
-        user.defaultListId = listId
+    @PostMapping("/set-default-list")
+    fun setDefaultList(@Valid @RequestBody req: SetDefaultListRequest): ResponseEntity<UserProfileDto> {
+        val user = currentUserService.currentUser()
+        user.defaultListId = req.listId
         userRepository.save(user)
-        return "redirect:/user"
+        return profile()
     }
 
-    @PostMapping("/user/leave-list/{id}")
-    fun leaveList(@PathVariable id: Long, session: HttpSession): String {
-        val user = currentUser(session) ?: return "redirect:/login"
-        val list = shoppingListRepository.findById(id).orElse(null) ?: return "redirect:/user"
+    @PostMapping("/leave-list/{id}")
+    fun leaveList(@PathVariable id: Long): ResponseEntity<Void> {
+        val user = currentUserService.currentUser()
+        val list = shoppingListRepository.findById(id).orElse(null)
+            ?: return ResponseEntity.notFound().build()
         list.sharedWith.remove(user)
         if (user.defaultListId == id) {
             user.defaultListId = null
             userRepository.save(user)
         }
         shoppingListRepository.save(list)
-        return "redirect:/user"
+        return ResponseEntity.noContent().build()
     }
 }
