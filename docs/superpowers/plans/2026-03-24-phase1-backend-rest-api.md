@@ -1850,7 +1850,7 @@ class RecipeController(
 
     // ── Images ────────────────────────────────────────────────────────────────
 
-    @GetMapping("/api/recipe-images/{filename}")
+    @GetMapping("/recipe-images/{filename}")
     fun serveImage(@PathVariable filename: String): ResponseEntity<Resource> {
         val file = Paths.get(uploadDir, "recipe-images", filename)
         if (!Files.exists(file)) return ResponseEntity.notFound().build()
