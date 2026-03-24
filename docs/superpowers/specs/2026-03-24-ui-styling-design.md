@@ -131,16 +131,18 @@ Replace the entire file with this skeleton after `shadcn init`. CSS variable ove
 
 @layer base {
   :root {
-    --background: 250 240 230;      /* #fdf6ee as HSL-ish — override with exact hex below */
-    --foreground: 30 15 5;
-    --card: 255 255 255;
-    --card-foreground: 30 15 5;
-    --border: 232 201 160;
-    --primary: 201 106 43;
-    --primary-foreground: 255 248 240;
-    --muted-foreground: 122 92 58;
-    --destructive: 220 38 38;
-    --destructive-foreground: 255 255 255;
+    /* shadcn requires HSL channel triplets (H S% L%) — no hsl() wrapper.
+       Components reference these as hsl(var(--primary)) etc. */
+    --background: 33 80% 96%;        /* #fdf6ee */
+    --foreground: 26 77% 14%;        /* #3d1f08 */
+    --card: 0 0% 100%;               /* #ffffff */
+    --card-foreground: 26 77% 14%;   /* #3d1f08 */
+    --border: 34 61% 77%;            /* #e8c9a0 */
+    --primary: 24 65% 48%;           /* #c96a2b */
+    --primary-foreground: 33 100% 97%; /* #fff8f0 */
+    --muted-foreground: 32 36% 35%;  /* #7a5c3a */
+    --destructive: 0 72% 51%;        /* #dc2626 */
+    --destructive-foreground: 0 0% 100%;
     --radius: 0.5rem;
   }
 
@@ -150,7 +152,7 @@ Replace the entire file with this skeleton after `shadcn init`. CSS variable ove
 }
 ```
 
-> Note: shadcn uses space-separated RGB for CSS variables (`R G B` not `#rrggbb`). The hex values in the Color Palette table are the source of truth; convert to space-separated RGB for the `:root` block.
+> Note: shadcn CSS variables use **HSL channel triplets** (`H S% L%`), not hex or RGB. Components consume them as `hsl(var(--primary))`. The hex values in the Color Palette table are human-readable references; the HSL values above are what goes in `index.css`.
 
 ---
 
