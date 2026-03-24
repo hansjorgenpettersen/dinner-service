@@ -1,5 +1,6 @@
 package com.example.dinnerservice
 
+import jakarta.servlet.DispatcherType
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
@@ -30,6 +31,9 @@ class SecurityConfig(private val jwtFilter: JwtFilter) {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
+                    // Don't apply security to FORWARD/ERROR dispatches (avoids StackOverflow
+                    // when WelcomePageHandlerMapping forwards / → /index.html)
+                    .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()
                     // Public API endpoints
                     .requestMatchers("/api/auth/**", "/api/recipe-images/**", "/actuator/info").permitAll()
                     // All other /api/** endpoints require authentication
