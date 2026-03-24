@@ -8,3 +8,4 @@ target/
 .DS_Store
 C/
 application-local.properties
+src/main/resources/static/
