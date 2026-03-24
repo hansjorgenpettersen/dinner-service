@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping
 class SpaController {
     /**
      * Forwards all non-API, non-static requests to index.html so React Router
-     * can handle client-side routing. Excludes /api/** and /recipe-images/**.
+     * can handle client-side routing. Excludes /api/**, /actuator/**, and /recipe-images/**.
      */
-    @GetMapping("/{path:^(?!api|recipe-images).*}/**")
+    @GetMapping("/{path:^(?!api|actuator|recipe-images).*}/**")
     fun spa(): String = "forward:/index.html"
 }
