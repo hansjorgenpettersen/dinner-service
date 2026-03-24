@@ -51,7 +51,7 @@ The CLI will:
 - Create `src/lib/utils.ts` with the `cn()` helper
 - Write CSS variable declarations into `src/index.css`
 
-After init, override the shadcn-generated CSS variables with the warm palette values from the Color Palette table above.
+After init, replace the generated `src/index.css` with the warm palette skeleton (see below).
 
 ### 3. Add shadcn components
 
@@ -63,7 +63,12 @@ This installs the five components plus their Radix UI peer dependencies:
 - `@radix-ui/react-slot` (Button)
 - `@radix-ui/react-label` (Label)
 - `class-variance-authority`, `clsx`, `tailwind-merge` (all components)
-- `lucide-react` (icons, install separately: `npm install lucide-react`)
+
+### 4. Install lucide-react (icons)
+
+```bash
+npm install lucide-react
+```
 
 ---
 
@@ -83,7 +88,7 @@ This installs the five components plus their Radix UI peer dependencies:
 - `frontend/package.json` — new dev/runtime deps from npm installs above
 - `frontend/tsconfig.json` — `shadcn init` adds `baseUrl` and `paths` for `@/` alias
 - `frontend/vite.config.ts` — `shadcn init` adds `resolve.alias` for `@/`
-- `frontend/src/index.css` — replace with Tailwind directives + warm CSS variable declarations
+- `frontend/src/index.css` — replace with Tailwind directives + warm CSS variable declarations (see skeleton below)
 
 **Modified manually (styling):**
 - `frontend/src/components/Layout.tsx` — restyle top navbar
@@ -99,6 +104,53 @@ This installs the five components plus their Radix UI peer dependencies:
 - `frontend/src/pages/ProductsPage.tsx`
 - `frontend/src/pages/UncategorizedProductsPage.tsx`
 - `frontend/src/pages/UserPage.tsx`
+
+---
+
+## tailwind.config.js
+
+Configure only the `content` paths — **do not** add custom color names to `extend.colors`. All color values are applied as inline hex (e.g. `bg-[#7a3a1a]`) directly in JSX, keeping the config minimal:
+
+```js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: { extend: {} },
+  plugins: [],
+}
+```
+
+## src/index.css
+
+Replace the entire file with this skeleton after `shadcn init`. CSS variable overrides go inside `@layer base` to respect Tailwind's cascade:
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 250 240 230;      /* #fdf6ee as HSL-ish — override with exact hex below */
+    --foreground: 30 15 5;
+    --card: 255 255 255;
+    --card-foreground: 30 15 5;
+    --border: 232 201 160;
+    --primary: 201 106 43;
+    --primary-foreground: 255 248 240;
+    --muted-foreground: 122 92 58;
+    --destructive: 220 38 38;
+    --destructive-foreground: 255 255 255;
+    --radius: 0.5rem;
+  }
+
+  body {
+    @apply bg-[#fdf6ee] text-[#3d1f08];
+  }
+}
+```
+
+> Note: shadcn uses space-separated RGB for CSS variables (`R G B` not `#rrggbb`). The hex values in the Color Palette table are the source of truth; convert to space-separated RGB for the `:root` block.
 
 ---
 
@@ -180,7 +232,7 @@ Note: `Dialog` is **out of scope**. Delete actions use inline confirmation (e.g.
 | Recipe Detail | Title + edit/delete buttons; ingredients as list rows; image thumbnail if present; action buttons at bottom |
 | Shopping Lists | List rows with list name + `Badge` for owner/shared status + chevron |
 | Shopping List Detail | Items grouped by category heading; checkbox + item name per row; strikethrough when checked; "+ Add Item" at bottom |
-| Products | Two-column layout: left 1/3 = category list with "+ Add Category"; right 2/3 = products for selected category with "+ Add Product". On the same page, clicking a category in the left column filters products in the right column (existing state logic, just restyled). |
+| Products | Two-column layout: left 1/3 = category list with "+ Add Category"; right 2/3 = products filtered by selected category with "+ Add Product". Add a `selectedCategoryId: number \| null` state; clicking a category row in the left column sets it and filters the products list on the right. |
 | Uncategorized Products | Simple list rows; each row has product name + category `<select>` dropdown |
 | User | Profile info `Card`; default shopping list `<select>`; "Leave" buttons for shared lists; logout `Button` at bottom |
 
