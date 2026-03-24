@@ -1,18 +1,23 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getProducts, getCategories, createProduct, updateProduct, deleteProduct,
          createCategory, deleteCategory } from '../api/products'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Trash2, Pencil, Check, X } from 'lucide-react'
 
 export default function ProductsPage() {
   const qc = useQueryClient()
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: getProducts })
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: getCategories })
 
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const [newName, setNewName] = useState('')
   const [newPrice, setNewPrice] = useState('')
   const [newCatId, setNewCatId] = useState('')
   const [catName, setCatName] = useState('')
-  const [catColor, setCatColor] = useState('#cccccc')
+  const [catColor, setCatColor] = useState('#c96a2b')
   const [editId, setEditId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
   const [editPrice, setEditPrice] = useState('')
@@ -33,71 +38,131 @@ export default function ProductsPage() {
   const del = useMutation({ mutationFn: (id: number) => deleteProduct(id), onSuccess: () => inv(['products']) })
 
   const createCat = useMutation({ mutationFn: () => createCategory({ name: catName, color: catColor }),
-    onSuccess: () => { inv(['categories']); setCatName(''); setCatColor('#cccccc') } })
+    onSuccess: () => { inv(['categories']); setCatName(''); setCatColor('#c96a2b') }
+  })
 
   const deleteCat = useMutation({ mutationFn: (id: number) => deleteCategory(id), onSuccess: () => inv(['categories']) })
 
+  const visibleProducts = selectedCategoryId === null
+    ? products
+    : products.filter(p => p.categoryId === selectedCategoryId)
+
   return (
-    <div>
-      <h1>Products</h1>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-[#3d1f08]">Products</h1>
+        <Link to="/products/uncategorized" className="text-sm text-[#7a5c3a] hover:text-[#c96a2b]">
+          Uncategorized →
+        </Link>
+      </div>
 
-      <form onSubmit={e => { e.preventDefault(); create.mutate() }}>
-        <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Product name" required />
-        <input type="number" value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Price" />
-        <select value={newCatId} onChange={e => setNewCatId(e.target.value)}>
-          <option value="">No category</option>
-          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <button type="submit">Add product</button>
-      </form>
+      <div className="flex gap-6">
+        {/* Left: Categories */}
+        <div className="w-1/3 flex-shrink-0">
+          <h2 className="text-sm font-semibold text-[#7a5c3a] uppercase tracking-wide mb-2">Categories</h2>
+          <div className="flex flex-col gap-1 mb-4">
+            <button
+              onClick={() => setSelectedCategoryId(null)}
+              className={`text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                selectedCategoryId === null
+                  ? 'bg-[#c96a2b] text-white'
+                  : 'text-[#3d1f08] hover:bg-[#fdf0e0]'
+              }`}
+            >
+              All products
+            </button>
+            {categories.map(c => (
+              <div key={c.id} className="flex items-center gap-1">
+                <button
+                  onClick={() => setSelectedCategoryId(c.id)}
+                  className={`flex-1 text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center gap-2 ${
+                    selectedCategoryId === c.id
+                      ? 'bg-[#c96a2b] text-white'
+                      : 'text-[#3d1f08] hover:bg-[#fdf0e0]'
+                  }`}
+                >
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: c.color }} />
+                  {c.name}
+                </button>
+                <button
+                  onClick={() => deleteCat.mutate(c.id)}
+                  className="p-1.5 text-[#c9b09a] hover:text-red-500 rounded"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
 
-      <table>
-        <tbody>
-          {products.map(p => (
-            <tr key={p.id}>
-              {editId === p.id ? (
-                <td colSpan={4}>
-                  <form onSubmit={e => { e.preventDefault(); edit.mutate() }}>
-                    <input value={editName} onChange={e => setEditName(e.target.value)} required />
-                    <input type="number" value={editPrice} onChange={e => setEditPrice(e.target.value)} />
-                    <select value={editCatId} onChange={e => setEditCatId(e.target.value)}>
-                      <option value="">No category</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                    <button type="submit">Save</button>
-                    <button type="button" onClick={() => setEditId(null)}>Cancel</button>
-                  </form>
-                </td>
-              ) : (
-                <>
-                  <td>{p.categoryColor && <span style={{ background: p.categoryColor, padding: '2px 6px' }}>{p.categoryName}</span>}</td>
-                  <td>{p.name}</td>
-                  <td>{p.price != null ? `€${p.price.toFixed(2)}` : ''}</td>
-                  <td>
-                    <button onClick={() => { setEditId(p.id); setEditName(p.name); setEditPrice(p.price?.toString() ?? ''); setEditCatId(p.categoryId?.toString() ?? '') }}>Edit</button>
-                    <button onClick={() => del.mutate(p.id)}>Delete</button>
-                  </td>
-                </>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          {/* Add category form */}
+          <form onSubmit={e => { e.preventDefault(); createCat.mutate() }} className="bg-white border border-[#e8c9a0] rounded-lg p-3 flex flex-col gap-2">
+            <p className="text-xs font-semibold text-[#7a5c3a]">+ Add category</p>
+            <Input value={catName} onChange={e => setCatName(e.target.value)} placeholder="Category name" required className="border-[#e8c9a0] text-sm h-8" />
+            <div className="flex gap-2 items-center">
+              <input type="color" value={catColor} onChange={e => setCatColor(e.target.value)} className="w-8 h-8 rounded border border-[#e8c9a0] cursor-pointer" />
+              <Button type="submit" size="sm" className="bg-[#c96a2b] hover:bg-[#a8571f] text-white flex-1 h-8">Add</Button>
+            </div>
+          </form>
+        </div>
 
-      <h2>Categories</h2>
-      <form onSubmit={e => { e.preventDefault(); createCat.mutate() }}>
-        <input value={catName} onChange={e => setCatName(e.target.value)} placeholder="Category name" required />
-        <input type="color" value={catColor} onChange={e => setCatColor(e.target.value)} />
-        <button type="submit">Add category</button>
-      </form>
-      <ul>
-        {categories.map(c => (
-          <li key={c.id} style={{ color: c.color }}>
-            {c.name}
-            <button onClick={() => deleteCat.mutate(c.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+        {/* Right: Products */}
+        <div className="flex-1">
+          <h2 className="text-sm font-semibold text-[#7a5c3a] uppercase tracking-wide mb-2">
+            {selectedCategoryId === null ? 'All Products' : (categories.find(c => c.id === selectedCategoryId)?.name ?? 'Products')}
+          </h2>
+
+          {/* Add product form */}
+          <form onSubmit={e => { e.preventDefault(); create.mutate() }} className="bg-white border border-[#e8c9a0] rounded-lg p-3 mb-3 flex flex-wrap gap-2 items-end">
+            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Product name" required className="border-[#e8c9a0] flex-1 min-w-[120px] h-8 text-sm" />
+            <Input type="number" value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Price" className="border-[#e8c9a0] w-20 h-8 text-sm" />
+            <select value={newCatId} onChange={e => setNewCatId(e.target.value)} className="border border-[#e8c9a0] rounded-md px-2 h-8 text-sm bg-white">
+              <option value="">No category</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <Button type="submit" size="sm" className="bg-[#c96a2b] hover:bg-[#a8571f] text-white h-8">Add</Button>
+          </form>
+
+          {visibleProducts.length === 0 ? (
+            <p className="text-[#7a5c3a] text-sm py-6 text-center">No products here yet.</p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {visibleProducts.map(p => (
+                <div key={p.id} className="bg-white border border-[#e8c9a0] rounded-lg px-3 py-2">
+                  {editId === p.id ? (
+                    <form onSubmit={e => { e.preventDefault(); edit.mutate() }} className="flex flex-wrap gap-2 items-center">
+                      <Input value={editName} onChange={e => setEditName(e.target.value)} required className="border-[#e8c9a0] flex-1 h-7 text-sm" />
+                      <Input type="number" value={editPrice} onChange={e => setEditPrice(e.target.value)} className="border-[#e8c9a0] w-20 h-7 text-sm" />
+                      <select value={editCatId} onChange={e => setEditCatId(e.target.value)} className="border border-[#e8c9a0] rounded px-2 h-7 text-sm bg-white">
+                        <option value="">No category</option>
+                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                      <button type="submit" className="text-green-600 hover:text-green-800 p-1"><Check className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => setEditId(null)} className="text-[#7a5c3a] hover:text-[#3d1f08] p-1"><X className="w-4 h-4" /></button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {p.categoryColor && (
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.categoryColor }} />
+                      )}
+                      <span className="flex-1 text-sm text-[#3d1f08]">{p.name}</span>
+                      {p.price != null && <span className="text-sm text-[#7a5c3a]">€{p.price.toFixed(2)}</span>}
+                      <button
+                        onClick={() => { setEditId(p.id); setEditName(p.name); setEditPrice(p.price?.toString() ?? ''); setEditCatId(p.categoryId?.toString() ?? '') }}
+                        className="text-[#c9b09a] hover:text-[#c96a2b] p-1"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => del.mutate(p.id)} className="text-[#c9b09a] hover:text-red-500 p-1">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
