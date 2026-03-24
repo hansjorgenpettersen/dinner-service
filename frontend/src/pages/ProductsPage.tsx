@@ -145,7 +145,7 @@ export default function ProductsPage() {
                         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.categoryColor }} />
                       )}
                       <span className="flex-1 text-sm text-[#3d1f08]">{p.name}</span>
-                      {p.price != null && <span className="text-sm text-[#7a5c3a]">€{p.price.toFixed(2)}</span>}
+                      {p.price != null && <span className="text-sm text-[#7a5c3a]">{p.price.toFixed(2)}</span>}
                       <button
                         onClick={() => { setEditId(p.id); setEditName(p.name); setEditPrice(p.price?.toString() ?? ''); setEditCatId(p.categoryId?.toString() ?? '') }}
                         className="text-[#c9b09a] hover:text-[#c96a2b] p-1"

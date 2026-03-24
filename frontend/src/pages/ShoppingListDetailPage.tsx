@@ -77,7 +77,7 @@ export default function ShoppingListDetailPage() {
         )}
       </div>
       <p className="text-[#7a5c3a] text-sm mb-6">
-        {list.items.length} items · Total €{list.totalPrice.toFixed(2)}
+        {list.items.length} items · Total {list.totalPrice.toFixed(2)}
       </p>
 
       {/* Add item form */}
@@ -115,7 +115,7 @@ export default function ShoppingListDetailPage() {
                   />
                   <span className={`flex-1 text-sm ${item.checked ? 'line-through text-[#b0a090]' : 'text-[#3d1f08]'}`}>
                     {item.count && `${item.count} × `}{item.name}
-                    {item.totalPrice != null && <span className="text-[#7a5c3a] ml-2">€{item.totalPrice.toFixed(2)}</span>}
+                    {item.totalPrice != null && <span className="text-[#7a5c3a] ml-2">{item.totalPrice.toFixed(2)}</span>}
                   </span>
                   <button onClick={() => remove.mutate(item.id)} className="text-[#c9b09a] hover:text-red-500 flex-shrink-0">
                     <X className="w-3.5 h-3.5" />
