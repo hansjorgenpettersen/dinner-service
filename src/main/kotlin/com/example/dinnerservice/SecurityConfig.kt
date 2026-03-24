@@ -33,6 +33,7 @@ class SecurityConfig(private val jwtFilter: JwtFilter) {
                     .requestMatchers(
                         "/api/auth/**",
                         "/api/recipe-images/**",
+                        "/actuator/info",
                         "/",
                         "/index.html",
                         "/assets/**",
