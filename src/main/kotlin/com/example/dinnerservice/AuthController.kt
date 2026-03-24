@@ -1,93 +1,61 @@
 package com.example.dinnerservice
 
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpSession
+import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.stereotype.Controller
-import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
-@Controller
+@RestController
+@RequestMapping("/api/auth")
 class AuthController(
     private val userRepository: UserRepository,
     private val resetTokenRepository: PasswordResetTokenRepository,
-    private val mailSender: JavaMailSender
+    private val mailSender: JavaMailSender,
+    private val jwtUtil: JwtUtil
 ) {
-
     private val encoder = BCryptPasswordEncoder()
 
-    @GetMapping("/")
-    fun index(session: HttpSession): String {
-        if (session.getAttribute("email") != null) return "redirect:/dashboard"
-        return "redirect:/login"
-    }
-
-    @GetMapping("/login")
-    fun loginPage(session: HttpSession): String {
-        if (session.getAttribute("email") != null) return "redirect:/dashboard"
-        return "login"
-    }
-
     @PostMapping("/login")
-    fun login(
-        @RequestParam email: String,
-        @RequestParam password: String,
-        session: HttpSession
-    ): String {
-        val trimmed = email.trim().lowercase()
-        if (trimmed.isEmpty() || password.isEmpty()) return "redirect:/login?error"
-
-        val user = userRepository.findByEmail(trimmed).orElse(null)
-            ?: return "redirect:/login?error=notfound"
-
-        if (user.passwordHash == null || !encoder.matches(password, user.passwordHash)) {
-            return "redirect:/login?error=badpass"
+    fun login(@Valid @RequestBody req: LoginRequest): ResponseEntity<AuthResponse> {
+        val user = userRepository.findByEmail(req.email.trim().lowercase())
+            .orElseThrow { ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials") }
+        if (user.passwordHash == null || !encoder.matches(req.password, user.passwordHash)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
         }
-
-        session.setAttribute("email", trimmed)
-        val redirect = user.defaultListId?.let { "/shopping-lists/$it" } ?: "/dashboard"
-        return "redirect:$redirect"
-    }
-
-    @GetMapping("/register")
-    fun registerPage(session: HttpSession): String {
-        if (session.getAttribute("email") != null) return "redirect:/dashboard"
-        return "register"
+        return ResponseEntity.ok(AuthResponse(jwtUtil.generateToken(user.email), user.email))
     }
 
     @PostMapping("/register")
-    fun register(
-        @RequestParam email: String,
-        @RequestParam password: String,
-        @RequestParam confirmPassword: String,
-        session: HttpSession
-    ): String {
-        val trimmed = email.trim().lowercase()
-        if (trimmed.isEmpty() || password.isEmpty()) return "redirect:/register?error=empty"
-        if (password != confirmPassword) return "redirect:/register?error=mismatch"
-        if (password.length < 8) return "redirect:/register?error=short"
-        if (userRepository.findByEmail(trimmed).isPresent) return "redirect:/register?error=exists"
-
-        val hash = encoder.encode(password)
-        userRepository.save(User(email = trimmed, passwordHash = hash))
-        return "redirect:/login?registered"
+    fun register(@Valid @RequestBody req: RegisterRequest): ResponseEntity<AuthResponse> {
+        if (req.password != req.confirmPassword) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match")
+        }
+        val email = req.email.trim().lowercase()
+        if (userRepository.findByEmail(email).isPresent) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Email already in use")
+        }
+        val user = userRepository.save(User(email = email, passwordHash = encoder.encode(req.password)))
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(AuthResponse(jwtUtil.generateToken(user.email), user.email))
     }
 
-    @GetMapping("/forgot-password")
-    fun forgotPasswordPage(): String = "forgot-password"
+    @PostMapping("/logout")
+    fun logout(): ResponseEntity<Void> = ResponseEntity.noContent().build()
 
     @PostMapping("/forgot-password")
-    fun forgotPassword(@RequestParam email: String, request: HttpServletRequest): String {
-        val trimmed = email.trim().lowercase()
-        val user = userRepository.findByEmail(trimmed).orElse(null)
-
-        // Always show "sent" to avoid revealing whether an email exists
+    fun forgotPassword(
+        @Valid @RequestBody req: ForgotPasswordRequest,
+        request: HttpServletRequest
+    ): ResponseEntity<Map<String, String>> {
+        val user = userRepository.findByEmail(req.email.trim().lowercase()).orElse(null)
         if (user != null) {
             resetTokenRepository.deleteByUser(user)
             val token = UUID.randomUUID().toString()
@@ -99,55 +67,27 @@ class AuthController(
             val message = SimpleMailMessage()
             message.setTo(user.email)
             message.subject = "Dinner Service – Password Reset"
-            message.text = "Click the link below to reset your password (expires in 1 hour):\n\n$resetUrl\n\nIf you did not request this, you can ignore this email."
+            message.text = "Click the link below to reset your password (expires in 1 hour):\n\n$resetUrl"
             mailSender.send(message)
         }
-
-        return "redirect:/forgot-password?sent"
-    }
-
-    @GetMapping("/reset-password")
-    fun resetPasswordPage(@RequestParam token: String, model: Model): String {
-        val resetToken = resetTokenRepository.findByToken(token).orElse(null)
-        if (resetToken == null || resetToken.expiresAt.isBefore(LocalDateTime.now())) {
-            return "redirect:/forgot-password?expired"
-        }
-        model.addAttribute("token", token)
-        return "reset-password"
+        // Always return success to avoid revealing whether an email exists
+        return ResponseEntity.ok(mapOf("message" to "If that email exists, a reset link has been sent."))
     }
 
     @PostMapping("/reset-password")
-    fun resetPassword(
-        @RequestParam token: String,
-        @RequestParam password: String,
-        @RequestParam confirmPassword: String
-    ): String {
-        if (password.length < 8) return "redirect:/reset-password?token=$token&error=short"
-        if (password != confirmPassword) return "redirect:/reset-password?token=$token&error=mismatch"
-
-        val resetToken = resetTokenRepository.findByToken(token).orElse(null)
-        if (resetToken == null || resetToken.expiresAt.isBefore(LocalDateTime.now())) {
-            return "redirect:/forgot-password?expired"
+    fun resetPassword(@Valid @RequestBody req: ResetPasswordRequest): ResponseEntity<Map<String, String>> {
+        if (req.password != req.confirmPassword) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match")
         }
-
+        val resetToken = resetTokenRepository.findByToken(req.token).orElse(null)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "TOKEN_INVALID")
+        if (resetToken.expiresAt.isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "TOKEN_EXPIRED")
+        }
         val user = resetToken.user
-        user.passwordHash = encoder.encode(password)
+        user.passwordHash = encoder.encode(req.password)
         userRepository.save(user)
         resetTokenRepository.delete(resetToken)
-
-        return "redirect:/login?reset"
-    }
-
-    @GetMapping("/dashboard")
-    fun dashboard(session: HttpSession, model: Model): String {
-        val email = session.getAttribute("email") ?: return "redirect:/login"
-        model.addAttribute("email", email)
-        return "dashboard"
-    }
-
-    @PostMapping("/logout")
-    fun logout(session: HttpSession): String {
-        session.invalidate()
-        return "redirect:/login"
+        return ResponseEntity.ok(mapOf("message" to "Password reset successfully."))
     }
 }
