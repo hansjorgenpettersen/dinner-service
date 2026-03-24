@@ -9,3 +9,4 @@ target/
 C/
 application-local.properties
 src/main/resources/static/
+frontend/node_modules/
