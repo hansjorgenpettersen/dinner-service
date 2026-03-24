@@ -10,15 +10,19 @@ git fetch origin master
 CHANGES=$(git log HEAD..origin/master --oneline)
 
 if [ -n "$CHANGES" ]; then
-    echo "[$(date)] Changes detected, pulling and restarting..."
+    echo "[$(date)] Changes detected, pulling and building..."
     git pull origin master
 
+    # Build fat JAR (skip tests for speed; CI should run tests separately)
+    mvn package -DskipTests -q
+
     # Kill existing instance
-    pkill -f "spring-boot:run" 2>/dev/null
+    pkill -f "dinner-service.*\.jar" 2>/dev/null
     sleep 2
 
     # Start service in background
-    nohup mvn spring-boot:run > /projects/dinner-service/service.log 2>&1 &
+    JAR=$(ls target/dinner-service-*.jar | head -1)
+    nohup java -jar "$JAR" > /projects/dinner-service/service.log 2>&1 &
     echo "[$(date)] Service restarted (PID $!)"
 else
     echo "[$(date)] No changes."
