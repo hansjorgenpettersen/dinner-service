@@ -115,7 +115,6 @@ export default function ShoppingListDetailPage() {
                   onMouseDown={() => {
                     setItemName(p.name)
                     if (p.price != null) setUnitPrice(p.price.toString())
-                    setShowSuggestions(false)
                   }}
                   className="w-full text-left px-3 py-2 text-sm text-[#3d1f08] hover:bg-[#fdf0e0] flex justify-between"
                 >
