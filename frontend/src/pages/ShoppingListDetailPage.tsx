@@ -13,7 +13,7 @@ export default function ShoppingListDetailPage() {
   const listId = Number(id)
   const qc = useQueryClient()
   const [itemName, setItemName] = useState('')
-  const [count, setCount] = useState('')
+  const [count, setCount] = useState('1')
   const [unitPrice, setUnitPrice] = useState('')
   const [shareEmail, setShareEmail] = useState('')
   const [shareError, setShareError] = useState<string | null>(null)
@@ -34,7 +34,7 @@ export default function ShoppingListDetailPage() {
 
   const add = useMutation({ mutationFn: () =>
     addItem(listId, { name: itemName, count: count ? Number(count) : undefined, unitPrice: unitPrice ? Number(unitPrice) : undefined }),
-    onSuccess: () => { invalidate(); setItemName(''); setCount(''); setUnitPrice('') }
+    onSuccess: () => { invalidate(); setItemName(''); setCount('1'); setUnitPrice('') }
   })
 
   const toggle = useMutation({
