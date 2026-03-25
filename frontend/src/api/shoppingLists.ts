@@ -24,3 +24,6 @@ export const clearChecked = (listId: number) =>
 
 export const shareList = (listId: number, email: string) =>
   apiClient.post(`/shopping-lists/${listId}/share`, { email })
+
+export const unshareList = (listId: number, email: string) =>
+  apiClient.post(`/shopping-lists/${listId}/unshare`, { email })

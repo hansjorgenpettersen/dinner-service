@@ -62,7 +62,8 @@ class ShoppingListController(
                 id = list.id, name = list.name,
                 items = items.map { it.toDto() },
                 totalPrice = totalPrice,
-                isOwner = list.owner?.id == user.id
+                isOwner = list.owner?.id == user.id,
+                sharedWith = list.sharedWith.mapNotNull { it.email }
             )
         )
     }
@@ -125,6 +126,19 @@ class ShoppingListController(
         val target = userRepository.findByEmail(req.email.trim().lowercase()).orElse(null)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
         list.sharedWith.add(target)
+        shoppingListRepository.save(list)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/{id}/unshare")
+    fun unshare(@PathVariable id: Long, @Valid @RequestBody req: ShareRequest): ResponseEntity<Void> {
+        val user = currentUserService.currentUser()
+        val list = shoppingListRepository.findById(id).orElse(null)
+            ?: return ResponseEntity.notFound().build()
+        if (list.owner?.id != user.id) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        val target = userRepository.findByEmail(req.email.trim().lowercase()).orElse(null)
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+        list.sharedWith.remove(target)
         shoppingListRepository.save(list)
         return ResponseEntity.noContent().build()
     }

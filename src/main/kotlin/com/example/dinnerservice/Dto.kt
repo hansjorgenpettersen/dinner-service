@@ -78,7 +78,8 @@ data class ShoppingListDetailDto(
     val name: String,
     val items: List<ShoppingListItemDto>,
     val totalPrice: Double,
-    val isOwner: Boolean
+    val isOwner: Boolean,
+    val sharedWith: List<String>
 )
 
 data class ShoppingListsResponse(

@@ -26,7 +26,7 @@ export interface ShoppingListItem {
   addedByEmail: string | null
 }
 export interface ShoppingListDetail {
-  id: number; name: string; items: ShoppingListItem[]; totalPrice: number; isOwner: boolean
+  id: number; name: string; items: ShoppingListItem[]; totalPrice: number; isOwner: boolean; sharedWith: string[]
 }
 export interface ShoppingListsResponse { owned: ShoppingListSummary[]; shared: ShoppingListSummary[] }
 

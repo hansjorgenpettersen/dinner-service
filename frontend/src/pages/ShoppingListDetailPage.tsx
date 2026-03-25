@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getShoppingList, addItem, toggleItem, deleteItem, clearChecked, shareList } from '../api/shoppingLists'
+import { getShoppingList, addItem, toggleItem, deleteItem, clearChecked, shareList, unshareList } from '../api/shoppingLists'
 import type { ShoppingListDetail } from '../api/types'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -50,6 +50,11 @@ export default function ShoppingListDetailPage() {
     mutationFn: () => shareList(listId, shareEmail),
     onSuccess: () => { setShareEmail(''); setShareError(null); invalidate() },
     onError: () => setShareError('User not found.')
+  })
+
+  const unshare = useMutation({
+    mutationFn: (email: string) => unshareList(listId, email),
+    onSuccess: invalidate
   })
 
   if (isLoading || !list) return <div className="max-w-4xl mx-auto px-4 py-8 text-[#7a5c3a]">Loading…</div>
@@ -130,7 +135,17 @@ export default function ShoppingListDetailPage() {
       {/* Share section */}
       {list.isOwner && (
         <div className="mt-8 bg-white border border-[#e8c9a0] rounded-lg p-6">
-          <h3 className="text-base font-semibold text-[#3d1f08] mb-3">Share list</h3>
+          <h3 className="text-base font-semibold text-[#3d1f08] mb-3">Sharing</h3>
+          {list.sharedWith.length > 0 && (
+            <div className="flex flex-col gap-2 mb-4">
+              {list.sharedWith.map(email => (
+                <div key={email} className="flex items-center justify-between text-sm">
+                  <span className="text-[#3d1f08]">{email}</span>
+                  <button onClick={() => unshare.mutate(email)} className="text-[#c9b09a] hover:text-red-500 text-xs px-2 py-1">Remove</button>
+                </div>
+              ))}
+            </div>
+          )}
           {shareError && <p role="alert" className="text-red-600 text-sm mb-3">{shareError}</p>}
           <form onSubmit={e => { e.preventDefault(); share.mutate() }} className="flex gap-2">
             <Input type="email" value={shareEmail} onChange={e => setShareEmail(e.target.value)} placeholder="Email to share with" required className="border-[#e8c9a0] flex-1" />
