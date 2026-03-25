@@ -17,15 +17,23 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#fdf6ee]">
-      <nav className="bg-[#7a3a1a] px-4 py-3 flex items-center gap-1 sticky top-0 z-10">
-        <span className="text-[#f5e6d3] font-bold text-lg mr-4 select-none">🍽 Dinner Service</span>
-        <NavLink to="/dashboard" className={navCls}>Dashboard</NavLink>
+      <nav className="bg-[#7a3a1a] px-3 py-2 flex items-center gap-1 sticky top-0 z-10">
+        <span className="hidden sm:block text-[#f5e6d3] font-bold text-lg mr-3 select-none">🍽 Dinner Service</span>
+        <span className="sm:hidden text-[#f5e6d3] font-bold text-lg mr-2 select-none">🍽</span>
+        <NavLink to="/dashboard" className={navCls}>
+          <span className="hidden sm:inline">Dashboard</span>
+          <span className="sm:hidden">Home</span>
+        </NavLink>
         <NavLink to="/recipes" className={navCls}>Recipes</NavLink>
-        <NavLink to="/shopping-lists" className={navCls}>Shopping Lists</NavLink>
+        <NavLink to="/shopping-lists" className={navCls}>
+          <span className="hidden sm:inline">Shopping Lists</span>
+          <span className="sm:hidden">Lists</span>
+        </NavLink>
         <NavLink to="/products" className={navCls}>Products</NavLink>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2">
           <NavLink to="/user" className={navCls}>
-            <span className="max-w-[160px] truncate inline-block align-bottom">{currentEmail}</span>
+            <span className="hidden sm:inline max-w-[160px] truncate inline-block align-bottom">{currentEmail}</span>
+            <span className="sm:hidden">👤</span>
           </NavLink>
           <button
             onClick={handleLogout}
