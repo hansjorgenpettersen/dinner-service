@@ -24,6 +24,7 @@ export default function RecipeDetailPage() {
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editDesc, setEditDesc] = useState('')
+  const [lightbox, setLightbox] = useState<string | null>(null)
 
   const { data: recipe, isLoading } = useQuery({
     queryKey: ['recipe', recipeId, selectedListId],
@@ -197,7 +198,12 @@ export default function RecipeDetailPage() {
           <div className="flex flex-wrap gap-3 mb-4">
             {recipe.images.map(img => (
               <div key={img.id} className="relative group">
-                <img src={`/api/recipe-images/${img.filename}`} alt={img.originalName} className="w-28 h-28 object-cover rounded-lg border border-[#e8c9a0]" />
+                <img
+                  src={`/api/recipe-images/${img.filename}`}
+                  alt={img.originalName}
+                  className="w-28 h-28 object-cover rounded-lg border border-[#e8c9a0] cursor-pointer"
+                  onClick={() => setLightbox(`/api/recipe-images/${img.filename}`)}
+                />
                 <button
                   onClick={() => delImg.mutate(img.id)}
                   className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -214,6 +220,19 @@ export default function RecipeDetailPage() {
             onChange={e => { if (e.target.files?.length) uploadImg.mutate(e.target.files) }} />
         </label>
       </div>
+      {lightbox && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setLightbox(null)}
+          onKeyDown={e => e.key === 'Escape' && setLightbox(null)}
+          tabIndex={-1}
+        >
+          <img src={lightbox} alt="" className="max-w-full max-h-full rounded-lg object-contain" onClick={e => e.stopPropagation()} />
+          <button onClick={() => setLightbox(null)} className="absolute top-4 right-4 text-white hover:text-gray-300">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
