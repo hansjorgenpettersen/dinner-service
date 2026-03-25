@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getRecipe, addIngredient, deleteIngredient, addIngredientToList,
          removeIngredientFromList, uploadImages, deleteImage, deleteRecipe, updateRecipe } from '../api/recipes'
 import { searchProducts } from '../api/products'
+import { getProfile, setDefaultList } from '../api/user'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -31,6 +32,8 @@ export default function RecipeDetailPage() {
     queryFn: () => getRecipe(recipeId, selectedListId)
   })
 
+  const { data: profile } = useQuery({ queryKey: ['user'], queryFn: getProfile })
+
   const { data: searchResults = [] } = useQuery({
     queryKey: ['product-search', productSearch],
     queryFn: () => searchProducts(productSearch),
@@ -53,6 +56,10 @@ export default function RecipeDetailPage() {
   })
   const uploadImg = useMutation({ mutationFn: (files: FileList) => uploadImages(recipeId, files), onSuccess: invalidate })
   const delImg = useMutation({ mutationFn: (imgId: number) => deleteImage(recipeId, imgId), onSuccess: invalidate })
+  const setDefault = useMutation({
+    mutationFn: (listId: number | null) => setDefaultList(listId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['user'] })
+  })
 
   if (isLoading || !recipe) return <div className="max-w-4xl mx-auto px-4 py-8 text-[#7a5c3a]">Loading…</div>
 
@@ -62,7 +69,7 @@ export default function RecipeDetailPage() {
         <ChevronLeft className="w-4 h-4" /> Back to recipes
       </Link>
 
-      {/* Title / edit section */}
+      {/* Title */}
       <div className="bg-white border border-[#e8c9a0] rounded-lg p-6 mb-6">
         {editing ? (
           <form onSubmit={e => { e.preventDefault(); editRecipe.mutate() }} className="flex flex-col gap-3">
@@ -71,6 +78,7 @@ export default function RecipeDetailPage() {
               value={editDesc}
               onChange={e => setEditDesc(e.target.value)}
               rows={6}
+              placeholder="Description"
               className="w-full border border-[#e8c9a0] rounded-md px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-[#c96a2b]"
             />
             <div className="flex gap-2">
@@ -79,44 +87,87 @@ export default function RecipeDetailPage() {
             </div>
           </form>
         ) : (
-          <div>
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <h1 className="text-2xl font-bold text-[#3d1f08]">{recipe.name}</h1>
-              <div className="flex gap-2 flex-shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { setEditing(true); setEditName(recipe.name); setEditDesc(recipe.description) }}
-                  className="border-[#e8c9a0] text-[#7a5c3a] hover:text-[#3d1f08]"
-                >
-                  <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => { if (confirm('Delete this recipe?')) delRecipe.mutate() }}
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
-                </Button>
-              </div>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-bold text-[#3d1f08]">{recipe.name}</h1>
+            <div className="flex gap-2 flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setEditing(true); setEditName(recipe.name); setEditDesc(recipe.description) }}
+                className="border-[#e8c9a0] text-[#7a5c3a] hover:text-[#3d1f08]"
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => { if (confirm('Delete this recipe?')) delRecipe.mutate() }}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+              </Button>
             </div>
-            {recipe.description && <p className="text-[#7a5c3a] text-sm whitespace-pre-wrap">{recipe.description}</p>}
           </div>
         )}
       </div>
 
-      {/* Shopping list selector */}
-      <div className="bg-white border border-[#e8c9a0] rounded-lg p-4 mb-6 flex items-center gap-3">
-        <Label htmlFor="list-select" className="text-[#3d1f08] whitespace-nowrap">Shopping list:</Label>
-        <select
-          id="list-select"
-          value={selectedListId ?? ''}
-          onChange={e => setSelectedListId(e.target.value ? Number(e.target.value) : undefined)}
-          className="border border-[#e8c9a0] rounded-md px-2 py-1.5 text-sm text-[#3d1f08] bg-white flex-1"
-        >
-          <option value="">— none —</option>
-          {recipe.shoppingLists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-        </select>
+      {/* Photos */}
+      <div className="bg-white border border-[#e8c9a0] rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-semibold text-[#3d1f08] mb-4">Photos</h2>
+        {recipe.images.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-4">
+            {recipe.images.map(img => (
+              <div key={img.id} className="relative group">
+                <img
+                  src={`/api/recipe-images/${img.filename}`}
+                  alt={img.originalName}
+                  className="w-28 h-28 object-cover rounded-lg border border-[#e8c9a0] cursor-pointer"
+                  onClick={() => setLightbox(`/api/recipe-images/${img.filename}`)}
+                />
+                <button
+                  onClick={() => delImg.mutate(img.id)}
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#c96a2b] hover:text-[#a8571f]">
+          <span>+ Add photos</span>
+          <input type="file" multiple accept="image/*" className="hidden"
+            onChange={e => { if (e.target.files?.length) uploadImg.mutate(e.target.files) }} />
+        </label>
+      </div>
+
+      {/* Shopping list selector + default list */}
+      <div className="bg-white border border-[#e8c9a0] rounded-lg p-4 mb-6 flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <Label htmlFor="list-select" className="text-[#3d1f08] whitespace-nowrap text-sm">Shopping list:</Label>
+          <select
+            id="list-select"
+            value={selectedListId ?? ''}
+            onChange={e => setSelectedListId(e.target.value ? Number(e.target.value) : undefined)}
+            className="border border-[#e8c9a0] rounded-md px-2 py-1.5 text-sm text-[#3d1f08] bg-white flex-1"
+          >
+            <option value="">— none —</option>
+            {recipe.shoppingLists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+          </select>
+        </div>
+        {profile && (
+          <div className="flex items-center gap-3 border-t border-[#f5ebe0] pt-3">
+            <Label htmlFor="default-list-select" className="text-[#3d1f08] whitespace-nowrap text-sm">Default list:</Label>
+            <select
+              id="default-list-select"
+              value={profile.defaultListId ?? ''}
+              onChange={e => setDefault.mutate(e.target.value ? Number(e.target.value) : null)}
+              className="border border-[#e8c9a0] rounded-md px-2 py-1.5 text-sm text-[#3d1f08] bg-white flex-1"
+            >
+              <option value="">None</option>
+              {profile.allLists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Ingredients */}
@@ -191,35 +242,14 @@ export default function RecipeDetailPage() {
         </form>
       </div>
 
-      {/* Photos */}
-      <div className="bg-white border border-[#e8c9a0] rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-[#3d1f08] mb-4">Photos</h2>
-        {recipe.images.length > 0 && (
-          <div className="flex flex-wrap gap-3 mb-4">
-            {recipe.images.map(img => (
-              <div key={img.id} className="relative group">
-                <img
-                  src={`/api/recipe-images/${img.filename}`}
-                  alt={img.originalName}
-                  className="w-28 h-28 object-cover rounded-lg border border-[#e8c9a0] cursor-pointer"
-                  onClick={() => setLightbox(`/api/recipe-images/${img.filename}`)}
-                />
-                <button
-                  onClick={() => delImg.mutate(img.id)}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-[#c96a2b] hover:text-[#a8571f]">
-          <span>+ Add photos</span>
-          <input type="file" multiple accept="image/*" className="hidden"
-            onChange={e => { if (e.target.files?.length) uploadImg.mutate(e.target.files) }} />
-        </label>
-      </div>
+      {/* Description */}
+      {recipe.description && (
+        <div className="bg-white border border-[#e8c9a0] rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-[#3d1f08] mb-3">Description</h2>
+          <p className="text-[#7a5c3a] text-sm whitespace-pre-wrap">{recipe.description}</p>
+        </div>
+      )}
+
       {lightbox && (
         <div
           className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
