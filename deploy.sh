@@ -16,8 +16,8 @@ if [ -n "$CHANGES" ]; then
     # Rebuild frontend
     cd frontend && ./node_modules/.bin/vite build && cd ..
 
-    # Build fat JAR — skip test compilation entirely
-    mvn clean package -Dmaven.test.skip=true -q
+    # Build fat JAR — skip test compilation and frontend plugin (already built above)
+    mvn clean package -Dmaven.test.skip=true -Dfrontend.skip=true -q
 
     # Restart service
     pkill -f "dinner-service.*\.jar" 2>/dev/null || true
