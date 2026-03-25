@@ -70,43 +70,26 @@ export default function RecipeDetailPage() {
 
       {/* Title */}
       <div className="bg-white border border-[#e8c9a0] rounded-lg p-6 mb-6">
-        {editing ? (
-          <form onSubmit={e => { e.preventDefault(); editRecipe.mutate() }} className="flex flex-col gap-3">
-            <Input value={editName} onChange={e => setEditName(e.target.value)} required className="border-[#e8c9a0] text-lg font-bold" />
-            <textarea
-              value={editDesc}
-              onChange={e => setEditDesc(e.target.value)}
-              rows={6}
-              placeholder="Description"
-              className="w-full border border-[#e8c9a0] rounded-md px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-[#c96a2b]"
-            />
-            <div className="flex gap-2">
-              <Button type="submit" className="bg-[#c96a2b] hover:bg-[#a8571f] text-white">Save</Button>
-              <Button type="button" variant="outline" onClick={() => setEditing(false)} className="border-[#e8c9a0] text-[#7a5c3a]">Cancel</Button>
-            </div>
-          </form>
-        ) : (
-          <div className="flex items-start justify-between gap-4">
-            <h1 className="text-2xl font-bold text-[#3d1f08]">{recipe.name}</h1>
-            <div className="flex gap-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { setEditing(true); setEditName(recipe.name); setEditDesc(recipe.description) }}
-                className="border-[#e8c9a0] text-[#7a5c3a] hover:text-[#3d1f08]"
-              >
-                <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => { if (confirm('Delete this recipe?')) delRecipe.mutate() }}
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
-              </Button>
-            </div>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-2xl font-bold text-[#3d1f08]">{recipe.name}</h1>
+          <div className="flex gap-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setEditing(true); setEditName(recipe.name); setEditDesc(recipe.description) }}
+              className="border-[#e8c9a0] text-[#7a5c3a] hover:text-[#3d1f08]"
+            >
+              <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => { if (confirm('Delete this recipe?')) delRecipe.mutate() }}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+            </Button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Photos */}
@@ -228,17 +211,39 @@ export default function RecipeDetailPage() {
       </div>
 
       {/* Description */}
-      {recipe.description && (
-        <div className="bg-white border border-[#e8c9a0] rounded-lg p-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-[#3d1f08]">Description</h2>
-            <button onClick={() => { setEditing(true); setEditName(recipe.name); setEditDesc(recipe.description) }} className="text-[#c9b09a] hover:text-[#c96a2b] p-1">
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <p className="text-[#7a5c3a] text-sm whitespace-pre-wrap">{recipe.description}</p>
-        </div>
-      )}
+      <div className="bg-white border border-[#e8c9a0] rounded-lg p-6">
+        {editing ? (
+          <form onSubmit={e => { e.preventDefault(); editRecipe.mutate() }} className="flex flex-col gap-3">
+            <Label className="text-[#3d1f08] font-semibold">Name</Label>
+            <Input value={editName} onChange={e => setEditName(e.target.value)} required className="border-[#e8c9a0] text-lg font-bold" />
+            <Label className="text-[#3d1f08] font-semibold">Description</Label>
+            <textarea
+              value={editDesc}
+              onChange={e => setEditDesc(e.target.value)}
+              rows={6}
+              placeholder="Description"
+              className="w-full border border-[#e8c9a0] rounded-md px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-[#c96a2b]"
+            />
+            <div className="flex gap-2">
+              <Button type="submit" className="bg-[#c96a2b] hover:bg-[#a8571f] text-white">Save</Button>
+              <Button type="button" variant="outline" onClick={() => setEditing(false)} className="border-[#e8c9a0] text-[#7a5c3a]">Cancel</Button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-[#3d1f08]">Description</h2>
+              <button onClick={() => { setEditing(true); setEditName(recipe.name); setEditDesc(recipe.description) }} className="text-[#c9b09a] hover:text-[#c96a2b] p-1">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {recipe.description
+              ? <p className="text-[#7a5c3a] text-sm whitespace-pre-wrap">{recipe.description}</p>
+              : <p className="text-[#c9b09a] text-sm italic">No description yet.</p>
+            }
+          </>
+        )}
+      </div>
 
       {lightbox && (
         <div
