@@ -1,11 +1,11 @@
 #!/bin/bash
+set -e
 
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
 
 cd /projects/dinner-service
 
-# Pull and check if anything changed
 git fetch origin master
 CHANGES=$(git log HEAD..origin/master --oneline)
 
@@ -13,16 +13,17 @@ if [ -n "$CHANGES" ]; then
     echo "[$(date)] Changes detected, pulling and building..."
     git pull origin master
 
-    # Build fat JAR (skip tests for speed; CI should run tests separately)
-    mvn package -DskipTests -q
+    # Rebuild frontend
+    cd frontend && ./node_modules/.bin/vite build && cd ..
 
-    # Kill existing instance
-    pkill -f "dinner-service.*\.jar" 2>/dev/null
+    # Build fat JAR — skip test compilation entirely
+    mvn clean package -Dmaven.test.skip=true -q
+
+    # Restart service
+    pkill -f "dinner-service.*\.jar" 2>/dev/null || true
     sleep 2
-
-    # Start service in background
     JAR=$(ls target/dinner-service-*.jar | head -1)
-    nohup java -jar "$JAR" > /projects/dinner-service/service.log 2>&1 &
+    nohup java -jar "$JAR" --spring.config.additional-location=file:/projects/dinner-service/application-local.properties > /projects/dinner-service/service.log 2>&1 &
     echo "[$(date)] Service restarted (PID $!)"
 else
     echo "[$(date)] No changes."
