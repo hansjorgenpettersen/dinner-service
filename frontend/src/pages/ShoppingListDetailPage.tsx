@@ -17,12 +17,12 @@ export default function ShoppingListDetailPage() {
   const [unitPrice, setUnitPrice] = useState('')
   const [shareEmail, setShareEmail] = useState('')
   const [shareError, setShareError] = useState<string | null>(null)
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [inputFocused, setInputFocused] = useState(false)
 
   const { data: suggestions = [] } = useQuery({
     queryKey: ['product-search', itemName],
     queryFn: () => searchProducts(itemName),
-    enabled: itemName.length > 1 && showSuggestions
+    enabled: itemName.length > 1
   })
 
   const { data: list, isLoading } = useQuery({
@@ -99,13 +99,14 @@ export default function ShoppingListDetailPage() {
           <label className="text-xs text-[#7a5c3a]">Item</label>
           <Input
             value={itemName}
-            onChange={e => { setItemName(e.target.value); setShowSuggestions(true) }}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            onChange={e => setItemName(e.target.value)}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setTimeout(() => setInputFocused(false), 150)}
             placeholder="Item name"
             required
             className="border-[#e8c9a0]"
           />
-          {showSuggestions && suggestions.length > 0 && (
+          {inputFocused && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 bg-white border border-[#e8c9a0] rounded-md shadow-md z-10 mt-1">
               {suggestions.map(p => (
                 <button
