@@ -197,7 +197,7 @@ export default function RecipeDetailPage() {
           <div className="flex flex-wrap gap-3 mb-4">
             {recipe.images.map(img => (
               <div key={img.id} className="relative group">
-                <img src={`/recipe-images/${img.filename}`} alt={img.originalName} className="w-28 h-28 object-cover rounded-lg border border-[#e8c9a0]" />
+                <img src={`/api/recipe-images/${img.filename}`} alt={img.originalName} className="w-28 h-28 object-cover rounded-lg border border-[#e8c9a0]" />
                 <button
                   onClick={() => delImg.mutate(img.id)}
                   className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
