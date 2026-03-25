@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getShoppingList, addItem, toggleItem, deleteItem, clearChecked, shareList, unshareList } from '../api/shoppingLists'
+import { searchProducts } from '../api/products'
 import type { ShoppingListDetail } from '../api/types'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -16,6 +17,13 @@ export default function ShoppingListDetailPage() {
   const [unitPrice, setUnitPrice] = useState('')
   const [shareEmail, setShareEmail] = useState('')
   const [shareError, setShareError] = useState<string | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
+  const { data: suggestions = [] } = useQuery({
+    queryKey: ['product-search', itemName],
+    queryFn: () => searchProducts(itemName),
+    enabled: itemName.length > 1 && showSuggestions
+  })
 
   const { data: list, isLoading } = useQuery({
     queryKey: ['shopping-list', listId],
@@ -87,9 +95,35 @@ export default function ShoppingListDetailPage() {
 
       {/* Add item form */}
       <form onSubmit={e => { e.preventDefault(); add.mutate() }} className="bg-white border border-[#e8c9a0] rounded-lg p-4 mb-6 flex flex-wrap gap-2 items-end">
-        <div className="flex flex-col gap-1 flex-1 min-w-[140px]">
+        <div className="flex flex-col gap-1 flex-1 min-w-[140px] relative">
           <label className="text-xs text-[#7a5c3a]">Item</label>
-          <Input value={itemName} onChange={e => setItemName(e.target.value)} placeholder="Item name" required className="border-[#e8c9a0]" />
+          <Input
+            value={itemName}
+            onChange={e => { setItemName(e.target.value); setShowSuggestions(true) }}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            placeholder="Item name"
+            required
+            className="border-[#e8c9a0]"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 bg-white border border-[#e8c9a0] rounded-md shadow-md z-10 mt-1">
+              {suggestions.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onMouseDown={() => {
+                    setItemName(p.name)
+                    if (p.price != null) setUnitPrice(p.price.toString())
+                    setShowSuggestions(false)
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm text-[#3d1f08] hover:bg-[#fdf0e0] flex justify-between"
+                >
+                  <span>{p.name}</span>
+                  {p.price != null && <span className="text-[#7a5c3a]">{p.price.toFixed(2)}</span>}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-1 w-20">
           <label className="text-xs text-[#7a5c3a]">Qty</label>
