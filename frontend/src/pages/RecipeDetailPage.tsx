@@ -70,8 +70,8 @@ export default function RecipeDetailPage() {
             <textarea
               value={editDesc}
               onChange={e => setEditDesc(e.target.value)}
-              rows={3}
-              className="w-full border border-[#e8c9a0] rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#c96a2b]"
+              rows={6}
+              className="w-full border border-[#e8c9a0] rounded-md px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-[#c96a2b]"
             />
             <div className="flex gap-2">
               <Button type="submit" className="bg-[#c96a2b] hover:bg-[#a8571f] text-white">Save</Button>
@@ -100,7 +100,7 @@ export default function RecipeDetailPage() {
                 </Button>
               </div>
             </div>
-            {recipe.description && <p className="text-[#7a5c3a] text-sm">{recipe.description}</p>}
+            {recipe.description && <p className="text-[#7a5c3a] text-sm whitespace-pre-wrap">{recipe.description}</p>}
           </div>
         )}
       </div>
