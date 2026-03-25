@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getProfile } from '../api/user'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -25,7 +26,8 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login({ email, password })
-      navigate('/dashboard', { replace: true })
+      const profile = await getProfile()
+      navigate(profile.defaultListId ? `/shopping-lists/${profile.defaultListId}` : '/dashboard', { replace: true })
     } catch {
       setError('Invalid email or password.')
     } finally {
