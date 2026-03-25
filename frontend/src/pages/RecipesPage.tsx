@@ -57,7 +57,7 @@ export default function RecipesPage() {
             <Link key={r.id} to={`/recipes/${r.id}`}>
               <div className="bg-white border border-[#e8c9a0] rounded-lg px-4 py-3 flex items-center gap-3 hover:border-[#c96a2b] transition-colors">
                 {r.previewImage
-                  ? <img src={`/recipe-images/${r.previewImage}`} alt={r.name} className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                  ? <img src={`/api/recipe-images/${r.previewImage}`} alt={r.name} className="w-10 h-10 rounded object-cover flex-shrink-0" />
                   : <span className="text-2xl flex-shrink-0">🍽</span>
                 }
                 <span className="font-medium text-[#3d1f08] flex-1">{r.name}</span>
