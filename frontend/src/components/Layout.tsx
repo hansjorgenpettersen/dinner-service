@@ -1,15 +1,6 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { NavLink, Outlet } from 'react-router-dom'
 
 export default function Layout() {
-  const { currentEmail, logout } = useAuth()
-  const navigate = useNavigate()
-
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login')
-  }
-
   const navCls = ({ isActive }: { isActive: boolean }) =>
     isActive
       ? 'bg-[#c96a2b] text-white rounded px-3 py-1 text-sm font-medium'
@@ -30,17 +21,11 @@ export default function Layout() {
           <span className="sm:hidden">Lists</span>
         </NavLink>
         <NavLink to="/products" className={navCls}>Products</NavLink>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto">
           <NavLink to="/user" className={navCls}>
-            <span className="hidden sm:inline max-w-[160px] truncate inline-block align-bottom">{currentEmail}</span>
+            <span className="hidden sm:inline">User</span>
             <span className="sm:hidden">👤</span>
           </NavLink>
-          <button
-            onClick={handleLogout}
-            className="text-[#d4a07a] hover:text-[#f5e6d3] text-sm transition-colors"
-          >
-            Logout
-          </button>
         </div>
       </nav>
       <main>
