@@ -230,7 +230,12 @@ export default function RecipeDetailPage() {
       {/* Description */}
       {recipe.description && (
         <div className="bg-white border border-[#e8c9a0] rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[#3d1f08] mb-3">Description</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-[#3d1f08]">Description</h2>
+            <button onClick={() => { setEditing(true); setEditName(recipe.name); setEditDesc(recipe.description) }} className="text-[#c9b09a] hover:text-[#c96a2b] p-1">
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          </div>
           <p className="text-[#7a5c3a] text-sm whitespace-pre-wrap">{recipe.description}</p>
         </div>
       )}
