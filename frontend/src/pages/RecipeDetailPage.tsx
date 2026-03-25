@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getRecipe, addIngredient, deleteIngredient, addIngredientToList,
          removeIngredientFromList, uploadImages, deleteImage, deleteRecipe, updateRecipe } from '../api/recipes'
 import { searchProducts } from '../api/products'
-import { getProfile, setDefaultList } from '../api/user'
+import { getProfile } from '../api/user'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -33,6 +33,9 @@ export default function RecipeDetailPage() {
   })
 
   const { data: profile } = useQuery({ queryKey: ['user'], queryFn: getProfile })
+  useEffect(() => {
+    if (profile?.defaultListId && !selectedListId) setSelectedListId(profile.defaultListId)
+  }, [profile?.defaultListId])
 
   const { data: searchResults = [] } = useQuery({
     queryKey: ['product-search', productSearch],
@@ -56,10 +59,6 @@ export default function RecipeDetailPage() {
   })
   const uploadImg = useMutation({ mutationFn: (files: FileList) => uploadImages(recipeId, files), onSuccess: invalidate })
   const delImg = useMutation({ mutationFn: (imgId: number) => deleteImage(recipeId, imgId), onSuccess: invalidate })
-  const setDefault = useMutation({
-    mutationFn: (listId: number | null) => setDefaultList(listId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['user'] })
-  })
 
   if (isLoading || !recipe) return <div className="max-w-4xl mx-auto px-4 py-8 text-[#7a5c3a]">Loading…</div>
 
@@ -154,20 +153,6 @@ export default function RecipeDetailPage() {
             {recipe.shoppingLists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
         </div>
-        {profile && (
-          <div className="flex items-center gap-3 border-t border-[#f5ebe0] pt-3">
-            <Label htmlFor="default-list-select" className="text-[#3d1f08] whitespace-nowrap text-sm">Default list:</Label>
-            <select
-              id="default-list-select"
-              value={profile.defaultListId ?? ''}
-              onChange={e => setDefault.mutate(e.target.value ? Number(e.target.value) : null)}
-              className="border border-[#e8c9a0] rounded-md px-2 py-1.5 text-sm text-[#3d1f08] bg-white flex-1"
-            >
-              <option value="">None</option>
-              {profile.allLists.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* Ingredients */}
