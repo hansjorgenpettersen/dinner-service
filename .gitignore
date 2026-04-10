@@ -10,3 +10,6 @@ C/
 application-local.properties
 src/main/resources/static/
 frontend/node_modules/
+
+# Git worktrees
+.worktrees/
