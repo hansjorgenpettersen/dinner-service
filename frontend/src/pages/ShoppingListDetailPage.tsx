@@ -17,6 +17,7 @@ export default function ShoppingListDetailPage() {
   const [unitPrice, setUnitPrice] = useState('')
   const [shareEmail, setShareEmail] = useState('')
   const [shareError, setShareError] = useState<string | null>(null)
+  const [updateCountError, setUpdateCountError] = useState<string | null>(null)
   const [inputFocused, setInputFocused] = useState(false)
 
   const { data: suggestions = [] } = useQuery({
@@ -69,6 +70,7 @@ export default function ShoppingListDetailPage() {
     mutationFn: ({ itemId, count }: { itemId: number; count: number }) =>
       updateItemCount(listId, itemId, count),
     onMutate: async ({ itemId, count }) => {
+      setUpdateCountError(null)
       await qc.cancelQueries({ queryKey: ['shopping-list', listId] })
       const prev = qc.getQueryData(['shopping-list', listId])
       qc.setQueryData(['shopping-list', listId], (old: ShoppingListDetail | undefined) => old ? {
@@ -77,7 +79,11 @@ export default function ShoppingListDetailPage() {
       } : old)
       return { prev }
     },
-    onError: (_err, _vars, ctx) => { if (ctx?.prev) qc.setQueryData(['shopping-list', listId], ctx.prev) },
+    onError: (err: unknown, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['shopping-list', listId], ctx.prev)
+      const status = (err as { response?: { status?: number } })?.response?.status
+      setUpdateCountError(status === 403 ? 'You do not have permission to update this item.' : 'Failed to update quantity. Please try again.')
+    },
     onSettled: invalidate
   })
 
@@ -153,6 +159,11 @@ export default function ShoppingListDetailPage() {
       </form>
 
       {/* Items grouped by category */}
+      {updateCountError && (
+        <p role="alert" className="text-red-600 text-sm mb-2 bg-red-50 border border-red-200 rounded px-3 py-2">
+          {updateCountError}
+        </p>
+      )}
       <div className="flex flex-col gap-4">
         {Object.entries(groupedByCategory).map(([category, items]) => (
           <div key={category} className="bg-white border border-[#e8c9a0] rounded-lg overflow-hidden">
