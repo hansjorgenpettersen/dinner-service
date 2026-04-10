@@ -154,7 +154,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         val response = restTemplate.exchange(
             "/api/shopping-lists/${list.id}/items/${item.id}",
             HttpMethod.PATCH,
-            authEntity(token, mapOf("count" to 3)),
+            authEntity(token, UpdateItemCountRequest(3)),
             ShoppingListItemDto::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
@@ -170,7 +170,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         val response = restTemplate.exchange(
             "/api/shopping-lists/${list.id}/items/${item.id}",
             HttpMethod.PATCH,
-            authEntity(token, mapOf("count" to 3)),
+            authEntity(token, UpdateItemCountRequest(3)),
             Void::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
@@ -185,9 +185,20 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         val response = restTemplate.exchange(
             "/api/shopping-lists/${list.id}/items/${item.id}",
             HttpMethod.PATCH,
-            authEntity(token, mapOf("count" to 0)),
+            authEntity(token, UpdateItemCountRequest(0)),
             Void::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `PATCH item returns 404 when item does not exist`() {
+        val response = restTemplate.exchange(
+            "/api/shopping-lists/1/items/99999",
+            HttpMethod.PATCH,
+            authEntity(token, UpdateItemCountRequest(2)),
+            Void::class.java
+        )
+        assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 }

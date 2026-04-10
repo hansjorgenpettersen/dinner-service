@@ -1,6 +1,7 @@
 package com.example.dinnerservice
 
 import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
@@ -95,7 +96,9 @@ data class AddItemRequest(
     val unitPrice: Double?
 )
 
-data class UpdateItemCountRequest(val count: Int)
+// count is Int (not Double?) because the stepper UI only supports whole-number steps.
+// The entity stores Double? internally but this endpoint enforces integer-only updates.
+data class UpdateItemCountRequest(@field:Min(1) val count: Int)
 
 data class ShareRequest(@field:NotBlank @field:Email val email: String)
 

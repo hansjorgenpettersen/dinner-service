@@ -100,15 +100,17 @@ class ShoppingListController(
     fun updateItemCount(
         @PathVariable id: Long,
         @PathVariable itemId: Long,
-        @RequestBody req: UpdateItemCountRequest
+        @Valid @RequestBody req: UpdateItemCountRequest
     ): ResponseEntity<ShoppingListItemDto> {
         val user = currentUserService.currentUser()
         val item = shoppingListItemRepository.findById(itemId).orElse(null)
             ?: return ResponseEntity.notFound().build()
+        if (item.shoppingList?.id != id) return ResponseEntity.notFound().build()
+        // Only the item's creator or the list owner may update quantity.
+        // Shared-list members who did not add the item cannot edit it (intentional — toggle is unrestricted).
         if (item.addedBy?.id != user.id && item.shoppingList?.owner?.id != user.id) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         }
-        if (req.count < 1) return ResponseEntity.badRequest().build()
         item.count = req.count.toDouble()
         val saved = shoppingListItemRepository.save(item)
         return ResponseEntity.ok(saved.toDto())
