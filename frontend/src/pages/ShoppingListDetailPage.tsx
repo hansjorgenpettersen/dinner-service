@@ -173,19 +173,19 @@ export default function ShoppingListDetailPage() {
             </div>
             <div>
               {items.map(item => (
-                <div key={item.id} className="flex items-center gap-3 px-4 py-3 border-b border-[#f5ebe0] last:border-0">
+                <div key={item.id} className="flex items-center gap-3 px-4 py-3.5 border-b border-[#f5ebe0] last:border-0">
                   <input
                     type="checkbox"
                     checked={item.checked}
                     onChange={() => toggle.mutate(item.id)}
-                    className="w-4 h-4 accent-[#c96a2b] flex-shrink-0"
+                    className="w-5 h-5 accent-[#c96a2b] flex-shrink-0"
                   />
                   <span className={`flex-1 text-sm flex items-center gap-2 ${item.checked ? 'line-through text-[#b0a090]' : 'text-[#3d1f08]'}`}>
                     {item.count == null ? (
                       <button
                         type="button"
                         onClick={() => updateCount.mutate({ itemId: item.id, count: 1 })}
-                        className="w-5 h-5 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] text-xs leading-none flex-shrink-0"
+                        className="w-9 h-9 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] text-base leading-none flex-shrink-0"
                       >+</button>
                     ) : (
                       <span className="flex items-center gap-1 flex-shrink-0">
@@ -193,20 +193,20 @@ export default function ShoppingListDetailPage() {
                           type="button"
                           onClick={() => updateCount.mutate({ itemId: item.id, count: item.count! - 1 })}
                           disabled={item.count <= 1}
-                          className="w-5 h-5 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                          className="w-9 h-9 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] disabled:opacity-30 disabled:cursor-not-allowed text-base leading-none"
                         >−</button>
                         <span className="min-w-[1.5rem] text-center text-xs font-medium">{item.count}</span>
                         <button
                           type="button"
                           onClick={() => updateCount.mutate({ itemId: item.id, count: item.count! + 1 })}
-                          className="w-5 h-5 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] text-xs leading-none"
+                          className="w-9 h-9 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] text-base leading-none"
                         >+</button>
                       </span>
                     )}
                     {item.name}
                     {item.totalPrice != null && <span className="text-[#7a5c3a] ml-2">{item.totalPrice.toFixed(2)}</span>}
                   </span>
-                  <button onClick={() => remove.mutate(item.id)} className="text-[#c9b09a] hover:text-red-500 flex-shrink-0">
+                  <button onClick={() => remove.mutate(item.id)} className="w-9 h-9 flex items-center justify-center text-[#c9b09a] hover:text-red-500 flex-shrink-0">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
