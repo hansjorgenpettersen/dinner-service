@@ -84,6 +84,7 @@ export default function ShoppingListDetailPage() {
       const status = (err as { response?: { status?: number } })?.response?.status
       setUpdateCountError(status === 403 ? 'You do not have permission to update this item.' : 'Failed to update quantity. Please try again.')
     },
+    onSuccess: () => setUpdateCountError(null),
     onSettled: invalidate
   })
 
