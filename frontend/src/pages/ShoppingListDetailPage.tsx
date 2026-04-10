@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getShoppingList, addItem, toggleItem, deleteItem, clearChecked, shareList, unshareList } from '../api/shoppingLists'
+import { getShoppingList, addItem, toggleItem, deleteItem, clearChecked, shareList, unshareList, updateItemCount } from '../api/shoppingLists'
 import { searchProducts } from '../api/products'
 import type { ShoppingListDetail } from '../api/types'
 import { Button } from '../components/ui/button'
@@ -63,6 +63,22 @@ export default function ShoppingListDetailPage() {
   const unshare = useMutation({
     mutationFn: (email: string) => unshareList(listId, email),
     onSuccess: invalidate
+  })
+
+  const updateCount = useMutation({
+    mutationFn: ({ itemId, count }: { itemId: number; count: number }) =>
+      updateItemCount(listId, itemId, count),
+    onMutate: async ({ itemId, count }) => {
+      await qc.cancelQueries({ queryKey: ['shopping-list', listId] })
+      const prev = qc.getQueryData(['shopping-list', listId])
+      qc.setQueryData(['shopping-list', listId], (old: ShoppingListDetail | undefined) => old ? {
+        ...old,
+        items: old.items.map(i => i.id === itemId ? { ...i, count } : i)
+      } : old)
+      return { prev }
+    },
+    onError: (_err, _vars, ctx) => { if (ctx?.prev) qc.setQueryData(['shopping-list', listId], ctx.prev) },
+    onSettled: invalidate
   })
 
   if (isLoading || !list) return <div className="max-w-4xl mx-auto px-4 py-8 text-[#7a5c3a]">Loading…</div>
@@ -152,8 +168,30 @@ export default function ShoppingListDetailPage() {
                     onChange={() => toggle.mutate(item.id)}
                     className="w-4 h-4 accent-[#c96a2b] flex-shrink-0"
                   />
-                  <span className={`flex-1 text-sm ${item.checked ? 'line-through text-[#b0a090]' : 'text-[#3d1f08]'}`}>
-                    {item.count && `${item.count} × `}{item.name}
+                  <span className={`flex-1 text-sm flex items-center gap-2 ${item.checked ? 'line-through text-[#b0a090]' : 'text-[#3d1f08]'}`}>
+                    {item.count == null ? (
+                      <button
+                        type="button"
+                        onClick={() => updateCount.mutate({ itemId: item.id, count: 1 })}
+                        className="w-5 h-5 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] text-xs leading-none flex-shrink-0"
+                      >+</button>
+                    ) : (
+                      <span className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => updateCount.mutate({ itemId: item.id, count: item.count! - 1 })}
+                          disabled={item.count <= 1}
+                          className="w-5 h-5 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                        >−</button>
+                        <span className="min-w-[1.5rem] text-center text-xs font-medium">{item.count}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateCount.mutate({ itemId: item.id, count: item.count! + 1 })}
+                          className="w-5 h-5 flex items-center justify-center rounded border border-[#e8c9a0] text-[#7a5c3a] hover:bg-[#fdf0e0] text-xs leading-none"
+                        >+</button>
+                      </span>
+                    )}
+                    {item.name}
                     {item.totalPrice != null && <span className="text-[#7a5c3a] ml-2">{item.totalPrice.toFixed(2)}</span>}
                   </span>
                   <button onClick={() => remove.mutate(item.id)} className="text-[#c9b09a] hover:text-red-500 flex-shrink-0">

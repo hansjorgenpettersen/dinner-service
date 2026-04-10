@@ -27,3 +27,6 @@ export const shareList = (listId: number, email: string) =>
 
 export const unshareList = (listId: number, email: string) =>
   apiClient.post(`/shopping-lists/${listId}/unshare`, { email })
+
+export const updateItemCount = (listId: number, itemId: number, count: number) =>
+  apiClient.patch<ShoppingListItem>(`/shopping-lists/${listId}/items/${itemId}`, { count }).then(r => r.data)
