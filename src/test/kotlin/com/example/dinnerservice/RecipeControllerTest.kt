@@ -34,7 +34,7 @@ class RecipeControllerTest : IntegrationTestBase() {
     @Test
     fun `GET recipes returns empty list initially`() {
         val response = restTemplate.exchange(
-            "/api/recipes", HttpMethod.GET, authEntity(token),
+            "/api/recipes", HttpMethod.GET, authEntity<Void>(token),
             object : ParameterizedTypeReference<List<RecipeSummaryDto>>() {}
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
@@ -60,7 +60,7 @@ class RecipeControllerTest : IntegrationTestBase() {
         ).body!!
 
         val response = restTemplate.exchange(
-            "/api/recipes/${created.id}", HttpMethod.GET, authEntity(token),
+            "/api/recipes/${created.id}", HttpMethod.GET, authEntity<Void>(token),
             RecipeDetailDto::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
@@ -91,7 +91,7 @@ class RecipeControllerTest : IntegrationTestBase() {
         ).body!!
 
         val deleteResponse = restTemplate.exchange(
-            "/api/recipes/${created.id}", HttpMethod.DELETE, authEntity(token), Void::class.java
+            "/api/recipes/${created.id}", HttpMethod.DELETE, authEntity<Void>(token), Void::class.java
         )
         assertThat(deleteResponse.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
         assertThat(recipeRepository.findById(created.id).isEmpty).isTrue()
@@ -126,7 +126,7 @@ class RecipeControllerTest : IntegrationTestBase() {
 
         val response = restTemplate.postForEntity(
             "/api/recipes/${recipe.id}/ingredients/${ingredient.id}/add-to-list?listId=${list.id}",
-            authEntity(token),
+            authEntity<Void>(token),
             Void::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.NO_CONTENT)

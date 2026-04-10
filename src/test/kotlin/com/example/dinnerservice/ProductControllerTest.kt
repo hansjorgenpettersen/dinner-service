@@ -26,7 +26,7 @@ class ProductControllerTest : IntegrationTestBase() {
     @Test
     fun `GET products returns empty list initially`() {
         val response = restTemplate.exchange(
-            "/api/products", HttpMethod.GET, authEntity(token),
+            "/api/products", HttpMethod.GET, authEntity<Void>(token),
             object : ParameterizedTypeReference<List<ProductDto>>() {}
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
@@ -60,7 +60,7 @@ class ProductControllerTest : IntegrationTestBase() {
         restTemplate.postForEntity("/api/products", authEntity(token, CreateProductRequest("Butter", null, null)), ProductDto::class.java)
 
         val response = restTemplate.exchange(
-            "/api/products/search?q=milk", HttpMethod.GET, authEntity(token),
+            "/api/products/search?q=milk", HttpMethod.GET, authEntity<Void>(token),
             object : ParameterizedTypeReference<List<ProductDto>>() {}
         )
         assertThat(response.body).hasSize(1)
@@ -93,7 +93,7 @@ class ProductControllerTest : IntegrationTestBase() {
         ).body!!
 
         val deleteResponse = restTemplate.exchange(
-            "/api/products/${created.id}", HttpMethod.DELETE, authEntity(token), Void::class.java
+            "/api/products/${created.id}", HttpMethod.DELETE, authEntity<Void>(token), Void::class.java
         )
         assertThat(deleteResponse.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
         assertThat(productRepository.findById(created.id).isEmpty).isTrue()

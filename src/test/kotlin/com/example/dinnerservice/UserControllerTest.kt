@@ -23,7 +23,7 @@ class UserControllerTest : IntegrationTestBase() {
     @Test
     fun `GET user returns profile with email and empty lists`() {
         val response = restTemplate.exchange(
-            "/api/user", HttpMethod.GET, authEntity(token), UserProfileDto::class.java
+            "/api/user", HttpMethod.GET, authEntity<Void>(token), UserProfileDto::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(response.body?.email).isEqualTo("user@test.com")
@@ -55,7 +55,7 @@ class UserControllerTest : IntegrationTestBase() {
 
         val response = restTemplate.postForEntity(
             "/api/user/leave-list/${list.id}",
-            authEntity(token), Void::class.java
+            authEntity<Void>(token), Void::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
         val updated = shoppingListRepository.findById(list.id).get()

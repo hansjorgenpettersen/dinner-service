@@ -27,7 +27,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
     @Test
     fun `GET shopping-lists returns owned and shared lists`() {
         val response = restTemplate.exchange(
-            "/api/shopping-lists", HttpMethod.GET, authEntity(token),
+            "/api/shopping-lists", HttpMethod.GET, authEntity<Void>(token),
             ShoppingListsResponse::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
@@ -53,7 +53,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         shoppingListItemRepository.save(ShoppingListItem(name = "Milk", shoppingList = list, addedBy = user))
 
         val response = restTemplate.exchange(
-            "/api/shopping-lists/${list.id}", HttpMethod.GET, authEntity(token),
+            "/api/shopping-lists/${list.id}", HttpMethod.GET, authEntity<Void>(token),
             ShoppingListDetailDto::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
@@ -68,7 +68,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         val list = shoppingListRepository.save(ShoppingList(name = "Private", owner = other))
 
         val response = restTemplate.exchange(
-            "/api/shopping-lists/${list.id}", HttpMethod.GET, authEntity(token),
+            "/api/shopping-lists/${list.id}", HttpMethod.GET, authEntity<Void>(token),
             ErrorResponse::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
@@ -96,7 +96,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
 
         val response = restTemplate.postForEntity(
             "/api/shopping-lists/${list.id}/items/${item.id}/toggle",
-            authEntity(token), ShoppingListItemDto::class.java
+            authEntity<Void>(token), ShoppingListItemDto::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(response.body?.checked).isTrue()
@@ -109,7 +109,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         val item = shoppingListItemRepository.save(ShoppingListItem(name = "Milk", shoppingList = list, addedBy = user))
 
         val response = restTemplate.exchange(
-            "/api/shopping-lists/${list.id}/items/${item.id}", HttpMethod.DELETE, authEntity(token), Void::class.java
+            "/api/shopping-lists/${list.id}/items/${item.id}", HttpMethod.DELETE, authEntity<Void>(token), Void::class.java
         )
         assertThat(response.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
         assertThat(shoppingListItemRepository.findById(item.id).isEmpty).isTrue()
@@ -122,7 +122,7 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         shoppingListItemRepository.save(ShoppingListItem(name = "Milk", checked = true, shoppingList = list, addedBy = user))
         shoppingListItemRepository.save(ShoppingListItem(name = "Bread", checked = false, shoppingList = list, addedBy = user))
 
-        restTemplate.postForEntity("/api/shopping-lists/${list.id}/items/clear-checked", authEntity(token), Void::class.java)
+        restTemplate.postForEntity("/api/shopping-lists/${list.id}/items/clear-checked", authEntity<Void>(token), Void::class.java)
 
         val remaining = shoppingListItemRepository.findByShoppingList(list)
         assertThat(remaining).hasSize(1)
