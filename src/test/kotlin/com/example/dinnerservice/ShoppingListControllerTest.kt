@@ -144,4 +144,50 @@ class ShoppingListControllerTest : IntegrationTestBase() {
         val updated = shoppingListRepository.findById(list.id).get()
         assertThat(updated.sharedWith.any { it.email == "friend@test.com" }).isTrue()
     }
+
+    @Test
+    fun `PATCH item updates count`() {
+        val user = userRepository.findByEmail("user@test.com").get()
+        val list = shoppingListRepository.save(ShoppingList(name = "List", owner = user))
+        val item = shoppingListItemRepository.save(ShoppingListItem(name = "Milk", count = 1.0, shoppingList = list, addedBy = user))
+
+        val response = restTemplate.exchange(
+            "/api/shopping-lists/${list.id}/items/${item.id}",
+            HttpMethod.PATCH,
+            authEntity(token, mapOf("count" to 3)),
+            ShoppingListItemDto::class.java
+        )
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body?.count).isEqualTo(3.0)
+    }
+
+    @Test
+    fun `PATCH item returns 403 when user is not owner or creator`() {
+        val other = userRepository.save(User(email = "other@test.com"))
+        val list = shoppingListRepository.save(ShoppingList(name = "List", owner = other))
+        val item = shoppingListItemRepository.save(ShoppingListItem(name = "Milk", count = 1.0, shoppingList = list, addedBy = other))
+
+        val response = restTemplate.exchange(
+            "/api/shopping-lists/${list.id}/items/${item.id}",
+            HttpMethod.PATCH,
+            authEntity(token, mapOf("count" to 3)),
+            Void::class.java
+        )
+        assertThat(response.statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+    }
+
+    @Test
+    fun `PATCH item returns 400 for count less than 1`() {
+        val user = userRepository.findByEmail("user@test.com").get()
+        val list = shoppingListRepository.save(ShoppingList(name = "List", owner = user))
+        val item = shoppingListItemRepository.save(ShoppingListItem(name = "Milk", count = 2.0, shoppingList = list, addedBy = user))
+
+        val response = restTemplate.exchange(
+            "/api/shopping-lists/${list.id}/items/${item.id}",
+            HttpMethod.PATCH,
+            authEntity(token, mapOf("count" to 0)),
+            Void::class.java
+        )
+        assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+    }
 }

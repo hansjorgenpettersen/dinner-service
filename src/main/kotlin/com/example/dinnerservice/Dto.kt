@@ -95,6 +95,8 @@ data class AddItemRequest(
     val unitPrice: Double?
 )
 
+data class UpdateItemCountRequest(val count: Int)
+
 data class ShareRequest(@field:NotBlank @field:Email val email: String)
 
 // ── Product ───────────────────────────────────────────────────────────────────

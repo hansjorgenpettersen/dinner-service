@@ -8,7 +8,7 @@ class ShoppingListItem(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
     val name: String = "",
-    val count: Double? = null,
+    var count: Double? = null,
     val unitPrice: Double? = null,
     var checked: Boolean = false,
     @ManyToOne
@@ -22,9 +22,13 @@ class ShoppingListItem(
     val shoppingList: ShoppingList? = null
 ) {
     val totalPrice: Double?
-        get() = when {
-            count != null && unitPrice != null -> count * unitPrice
-            unitPrice != null -> unitPrice
-            else -> null
+        get() {
+            val c = count
+            val p = unitPrice
+            return when {
+                c != null && p != null -> c * p
+                p != null -> p
+                else -> null
+            }
         }
 }

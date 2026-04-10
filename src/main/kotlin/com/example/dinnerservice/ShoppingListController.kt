@@ -96,6 +96,24 @@ class ShoppingListController(
         return ResponseEntity.ok(saved.toDto())
     }
 
+    @PatchMapping("/{id}/items/{itemId}")
+    fun updateItemCount(
+        @PathVariable id: Long,
+        @PathVariable itemId: Long,
+        @RequestBody req: UpdateItemCountRequest
+    ): ResponseEntity<ShoppingListItemDto> {
+        val user = currentUserService.currentUser()
+        val item = shoppingListItemRepository.findById(itemId).orElse(null)
+            ?: return ResponseEntity.notFound().build()
+        if (item.addedBy?.id != user.id && item.shoppingList?.owner?.id != user.id) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        }
+        if (req.count < 1) return ResponseEntity.badRequest().build()
+        item.count = req.count.toDouble()
+        val saved = shoppingListItemRepository.save(item)
+        return ResponseEntity.ok(saved.toDto())
+    }
+
     @DeleteMapping("/{id}/items/{itemId}")
     fun deleteItem(@PathVariable id: Long, @PathVariable itemId: Long): ResponseEntity<Void> {
         val user = currentUserService.currentUser()
