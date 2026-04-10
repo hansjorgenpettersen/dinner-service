@@ -117,8 +117,8 @@ export default function ShoppingListDetailPage() {
       </p>
 
       {/* Add item form */}
-      <form onSubmit={e => { e.preventDefault(); add.mutate() }} className="bg-white border border-[#e8c9a0] rounded-lg p-4 mb-6 flex flex-wrap gap-2 items-end">
-        <div className="flex flex-col gap-1 flex-1 min-w-[140px] relative">
+      <form onSubmit={e => { e.preventDefault(); add.mutate() }} className="bg-white border border-[#e8c9a0] rounded-lg p-4 mb-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="flex flex-col gap-1 relative sm:flex-1 sm:min-w-[140px]">
           <label className="text-xs text-[#7a5c3a]">Item</label>
           <Input
             value={itemName}
@@ -148,15 +148,17 @@ export default function ShoppingListDetailPage() {
             </div>
           )}
         </div>
-        <div className="flex flex-col gap-1 w-20">
-          <label className="text-xs text-[#7a5c3a]">Qty</label>
-          <Input type="number" value={count} onChange={e => setCount(e.target.value)} placeholder="0" className="border-[#e8c9a0]" />
+        <div className="flex gap-2 sm:contents">
+          <div className="flex flex-col gap-1 flex-1 sm:flex-none sm:w-20">
+            <label className="text-xs text-[#7a5c3a]">Qty</label>
+            <Input type="number" value={count} onChange={e => setCount(e.target.value)} placeholder="0" className="border-[#e8c9a0]" />
+          </div>
+          <div className="flex flex-col gap-1 flex-1 sm:flex-none sm:w-24">
+            <label className="text-xs text-[#7a5c3a]">Unit price</label>
+            <Input type="number" value={unitPrice} onChange={e => setUnitPrice(e.target.value)} placeholder="0.00" className="border-[#e8c9a0]" />
+          </div>
         </div>
-        <div className="flex flex-col gap-1 w-24">
-          <label className="text-xs text-[#7a5c3a]">Unit price</label>
-          <Input type="number" value={unitPrice} onChange={e => setUnitPrice(e.target.value)} placeholder="0.00" className="border-[#e8c9a0]" />
-        </div>
-        <Button type="submit" className="bg-[#c96a2b] hover:bg-[#a8571f] text-white self-end">Add</Button>
+        <Button type="submit" className="bg-[#c96a2b] hover:bg-[#a8571f] text-white w-full sm:w-auto sm:self-end">Add</Button>
       </form>
 
       {/* Items grouped by category */}
